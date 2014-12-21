@@ -1,9 +1,10 @@
-module MeleeWarrior(loadPictures,drawWarrior) where
+module Draw.MeleeWarrior(loadPictures,drawWarrior) where
 
 import Graphics.Gloss
 import Graphics.Gloss.Data.ViewPort
 
-import Draw(PictureSetLoader)
+import Logic
+import Draw.DrawTypes
 
 --main :: IO ()
 --main = do
@@ -18,11 +19,11 @@ import Draw(PictureSetLoader)
 --              (draw pic)
 --              timestep
 
-loadPictures :: PictureSetLoader
-loadPictures = sequence [loadBMP "Figure.bmp"]
+loadPictures :: IO LoadedPictures
+loadPictures = sequence [loadBMP "Draw/MeleeWarrior/Figure.svg.bmp"]
 
-drawWarrior :: Picture -> Float -> Picture
-drawWarrior pic n = translate n n pic
+drawWarrior :: WarriorDrawer
+drawWarrior pics (Warrior _ a) = translate (x a) (y a) (head pics)
 
 timestep :: ViewPort -> Float -> Float -> Float
 timestep _ _ = (+ 1)

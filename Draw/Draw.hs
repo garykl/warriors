@@ -1,48 +1,57 @@
 module Draw.Draw(mainLoop) where
 
-import qualified Data.EnumMap as EnumMap
+import qualified Data.Map as Map
+import Data.List (sortBy)
 
 import Graphics.Gloss
 import Graphics.Gloss.Data.ViewPort
 
-import Logic (FieldState,Team,Warrior,WarriorClass)
+import Logic
 
-import qualified MeleeWarrior as MW
+import Draw.DrawTypes
+import qualified Draw.MeleeWarrior as MW
 
 {--- load pictures for each warrior ---}
-type LoadedPictures = [Picture]
-type PictureSetLoader = IO LoadedPicture
-data AllLoadedPictures = AllLoadedPictures LoadedPictures (EnumMap.EnumMap WarriorClass LoadedPictures)
-
-pictureLoadFunctions wc
+loadWarriorPictures :: WarriorClass -> IO LoadedPictures
+loadWarriorPictures wc
         | wc==MeleeWarrior = MW.loadPictures
-        | otherwise        = error
+        | otherwise        = error ("No picture load function defined for WarriorClass \"" ++ show wc ++ "\"!")
 
 loadGeneralPictures :: IO LoadedPictures
-loadGeneralPictures = return :: IO []
+loadGeneralPictures = return []
 
 loadAllPictures :: IO AllLoadedPictures
 loadAllPictures = do
     generalPics <- loadGeneralPictures
-    warriorPics <- sequence $   assocs [minBound :: WarriorClass..]
-    LoadedPictures
+    warriorPics <- sequence $ map loadWarriorPictures [minBound :: WarriorClass ..]
+    return $ AllLoadedPictures generalPics (Map.fromList $ zip [minBound :: WarriorClass ..] warriorPics)
 
 {--- drawing ---}
-warriorDrawFunctions = undefined
+drawBackground :: LoadedPictures -> Picture
+drawBackground pics = Blank
 
-drawWarrior :: Warrior -> Picture
-drawWarrior _ = undefined
+getWarriorDrawer :: WarriorClass -> WarriorDrawer
+getWarriorDrawer wc
+    | wc==MeleeWarrior = MW.drawWarrior
+    | otherwise        = error ("No draw function defined for WarriorClass \"" ++ show wc ++ "\"!")
 
-drawAll :: AllLoadedPictures -> FieldState -> Picture
-drawAll _ _ = undefined
+drawWarrior :: AllWarriorPictures -> Warrior -> Picture
+drawWarrior pics w = getWarriorDrawer  wc (pics Map.! wc) w
+    where (Warrior Soul{figureClass=wc} _) = w
+
+drawWarriors :: AllWarriorPictures -> [Warrior] -> Picture
+drawWarriors pics ws = Pictures $ map (drawWarrior pics) $ (sortBy (\(Warrior _ (Agent _ y1 _ _)) -> \(Warrior _ (Agent _ y2 _ _)) -> compare y1 y2)) ws
+
+drawAll :: AllLoadedPictures -> Field -> Picture
+drawAll (AllLoadedPictures generalPics warriorPics) (p1, p2) = Pictures [drawBackground generalPics, drawWarriors warriorPics ((Map.elems p1)++(Map.elems p2))]
 
 {--- main loop ---}
-mainLoop :: (FieldState -> FieldState) -> IO ()
-mainLoop = do
-        pics <- loadPics
+mainLoop :: Field -> (Field -> Field) -> IO ()
+mainLoop initialField performAction = do
+        pics <- loadAllPictures
         simulate (InWindow "Warriors" (800, 550) (10, 10))
               green
               24
-              0
+              initialField
               (drawAll pics)
-              (\vp -> (\ti -> timestep))
+              (\vp -> (\ti -> performAction))

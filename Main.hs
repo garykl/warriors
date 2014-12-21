@@ -1,6 +1,6 @@
 module Main where
 
-import Logic (performAction)
+import Logic (initialField, performAction)
 import Draw.Draw (mainLoop)
 
 
@@ -8,5 +8,5 @@ main :: IO ()
 main = do
     putStrLn "Warriors"
     putStrLn "--------------------"
-    mainLoop performAction
+    mainLoop initialField performAction
 
