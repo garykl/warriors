@@ -6,16 +6,16 @@ import Graphics.Gloss.Data.ViewPort
 
 main :: IO ()
 main = do
-    pic <- loadBMP "Figure.svg.bmp"
-    display (InWindow "Warriors" (400, 550) (10, 10))
-            white
-            pic
-    -- simulate (InWindow "Warriors" (400, 550) (10, 10))
-    --          white
-    --          24
-    --          0
-    --          (draw pic)
-    --          timestep
+    pic <- loadBMP "Figure.bmp"
+--    display (InWindow "Warriors" (400, 550) (10, 10))
+--            white
+--            pic
+    simulate (InWindow "Warriors" (800, 550) (10, 10))
+              green
+              24
+              0
+              (draw pic)
+              timestep
 
 draw :: Picture -> Float -> Picture
 draw pic n = translate n n pic
