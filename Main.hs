@@ -7,15 +7,19 @@ main = do
     putStrLn "--------------------"
 
 
-data Soul = Soul { initiative :: Double,
+data Class = Viking | Wizard
+
+data Soul = Soul { figureClass :: Class,
+                   initiative :: Double,
                    velocity :: Double,
-                   vitality :: Double }
+                   vitality :: Double,
+                   strength :: Double }
 
 data Agent = Agent { x :: Double,
                      y :: Double,
                      lifepoints :: Double,
-                     melee :: Double }
-
+                     melee :: Double,
+                     meleePhase :: Double }
 type Effect = Agent
 
 affect :: Agent -> Effect -> Agent
@@ -25,7 +29,6 @@ affect agent effect = agent { x = x agent + x effect,
                               melee = melee agent + melee effect }
 
 data Warrior = Warrior Soul Agent
-
 type BluredWarrior = Warrior
 
 
@@ -35,6 +38,10 @@ drawWarrior _ = undefined
 
 -- | each Warrior sees its own environment.
 data Environment = Env Warrior [Warrior] [BluredWarrior]
+
+data Action = Melee Double Double
+            | MoveTo Double Double
+            | Follow Warrior
 
 
 ki :: [Environment] -> [Action]
