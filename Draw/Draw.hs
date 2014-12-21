@@ -40,7 +40,7 @@ drawWarrior pics w = getWarriorDrawer  wc (pics Map.! wc) w
     where (Warrior Soul{figureClass=wc} _) = w
 
 drawWarriors :: AllWarriorPictures -> [Warrior] -> Picture
-drawWarriors pics ws = Pictures $ map (drawWarrior pics) $ (sortBy (\(Warrior _ (Agent _ y1 _ _)) -> \(Warrior _ (Agent _ y2 _ _)) -> compare y1 y2)) ws
+drawWarriors pics ws = Pictures $ map (drawWarrior pics) $ (sortBy (\(Warrior _ (Agent (Pos _ y1) _ _)) -> \(Warrior _ (Agent (Pos _ y2) _ _)) -> compare y1 y2)) ws
 
 drawAll :: AllLoadedPictures -> Field -> Picture
 drawAll (AllLoadedPictures generalPics warriorPics) (p1, p2) = Pictures [drawBackground generalPics, drawWarriors warriorPics ((Map.elems p1)++(Map.elems p2))]

@@ -23,7 +23,4 @@ loadPictures :: IO LoadedPictures
 loadPictures = sequence [loadBMP "Draw/MeleeWarrior/Figure.svg.bmp"]
 
 drawWarrior :: WarriorDrawer
-drawWarrior pics (Warrior _ a) = translate (x a) (y a) (head pics)
-
-timestep :: ViewPort -> Float -> Float -> Float
-timestep _ _ = (+ 1)
+drawWarrior pics (Warrior _ (Agent (Pos x y) _ _)) = translate x y (head pics)

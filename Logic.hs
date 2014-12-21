@@ -75,6 +75,9 @@ type Field = (Tribe, Tribe)
 type WarriorIdentifier = (Int, String)
 
 
+initialField :: Field
+initialField = (M.singleton "Heinz" $ Warrior (Soul MeleeWarrior 1 1 1) (Agent (Pos 0 0) 1 (0, 0, (Pos 0 0))), M.empty)
+
 -- | each @Warrior@ on the @Field@ can try to act appropriately.
 performActions :: Intelligence -> Intelligence -> Field -> Field
 performActions i1 i2 f@(t1, t2) =
