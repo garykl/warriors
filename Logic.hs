@@ -21,8 +21,14 @@ data Soul = Soul { figureClass :: WarriorClass,
                    vitality :: Float,  -- ^ influences @Agent@s lifepoints
                    strength :: Float } -- ^ influences @Agent@s melee
 
+meleeDuration :: Int
+meleeDuration = 15
+
+meleeHitTime :: Int
+meleeHitTime = 10
+
 -- | @Melee@ = (Amount, Phase, Target/Position)
-type Melee = (Float, Float, Position)
+type Melee = (Float, Int, Position)
 
 -- | the @Agent@ is the suffering part during the simulation. Values may
 -- constantly change, due to attack, spells or movements.
@@ -76,7 +82,20 @@ type WarriorIdentifier = (Int, String)
 
 
 initialField :: Field
-initialField = (M.singleton "Heinz" $ Warrior (Soul MeleeWarrior 1 1 1) (Agent (Pos 0 0) 1 (0, 0, (Pos 0 0))), M.empty)
+initialField = (M.singleton "Heinz" $
+    Warrior (Soul MeleeWarrior 1 1 1)
+            (Agent (Pos 0 0) 1 (0, 0, Pos 0 0)), M.empty)
+
+
+hhh :: Field -> Field
+hhh (tribe, _) =
+    let Warrior soul agent = tribe M.! "Heinz"
+        (amount, phase, position) = melee agent
+    in  (M.singleton "Heinz" $ Warrior soul $
+            agent {melee = (amount,
+                            (phase + 1) `mod` meleeDuration, position) },
+         M.empty)
+
 
 -- | each @Warrior@ on the @Field@ can try to act appropriately.
 performActions :: Intelligence -> Intelligence -> Field -> Field

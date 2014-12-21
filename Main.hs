@@ -12,5 +12,5 @@ main :: IO ()
 main = do
     putStrLn "Warriors"
     putStrLn "--------------------"
-    mainLoop initialField (performActions garyKi mmpiKi)
+    mainLoop initialField hhh -- (performActions garyKi mmpiKi)
 
