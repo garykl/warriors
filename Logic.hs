@@ -3,8 +3,26 @@ module Logic where
 import qualified Data.Map as M
 
 
-data Position = Pos Float Float
+-- do not make them Num, because of abs, signum and fromInteger
+data Position = Pos Float Float deriving Show
 data Vector = Vec Float Float
+
+class Addable a where
+    (|+|) :: a -> a -> a
+    (|-|) :: a -> a -> a
+
+instance Addable Position where
+    Pos x1 y1 |+| Pos x2 y2 = Pos (x1 + x2) (y1 + y2)
+    Pos x1 y1 |-| Pos x2 y2 = Pos (x1 - x2) (y1 - y2)
+
+instance Addable MeleeData where
+    MeleeData a1 p1 pos1 |+| MeleeData a2 p2 pos2 =
+        MeleeData (a1 + a2) (p1 + p2) (pos1 |+| pos2)
+    MeleeData a1 p1 pos1 |-| MeleeData a2 p2 pos2 =
+        MeleeData (a1 - a2) (p1 - p2) (pos1 |-| pos2)
+
+-- instance Addable Agent where
+--     Agent 
 
 
 -- | represent different classes of warriors. Mainly interesting for drawing,
@@ -28,24 +46,26 @@ meleeHitTime :: Int
 meleeHitTime = 10
 
 -- | @Melee@ = (Amount, Phase, Target/Position)
-type Melee = (Float, Int, Position)
+data MeleeData = MeleeData Float Int Position
 
 -- | the @Agent@ is the suffering part during the simulation. Values may
 -- constantly change, due to attack, spells or movements.
 data Agent = Agent { position :: Position,
                      lifepoints :: Float,
-                     melee :: Melee }
+                     melee :: MeleeData }
 
 -- | when performing an @Action@, an @Effect@ is generated, that is applied to
 -- the warriors @Agent@.
 type Effect = Agent
 
 -- | an @Agent@ is changed by an @Effect@ by adding certain fields.
-affect :: Agent -> Effect -> Agent
-affect agent effect = agent { -- x = x agent + x effect,
-                              -- y = y agent + y effect,
-                              lifepoints = lifepoints agent + lifepoints effect }
-                              -- melee = melee agent + melee effect }
+instance Addable Agent where
+    agent |+| effect = agent { position = position agent |+| position effect,
+                               lifepoints = lifepoints agent + lifepoints effect,
+                               melee = melee agent |+| melee effect }
+    agent |-| effect = agent { position = position agent |-| position effect,
+                               lifepoints = lifepoints agent - lifepoints effect,
+                               melee = melee agent |-| melee effect }
 
 -- | the @Warrior@ is a virtual robot in arbitrary form, with an associating
 -- artificial interlligence.
@@ -84,16 +104,17 @@ type WarriorIdentifier = (Int, String)
 initialField :: Field
 initialField = (M.singleton "Heinz" $
     Warrior (Soul MeleeWarrior 1 1 1)
-            (Agent (Pos 0 0) 1 (0, 0, Pos 0 0)), M.empty)
+            (Agent (Pos 0 0) 1 (MeleeData 0 0 (Pos 0 0))), M.empty)
 
 
 hhh :: Field -> Field
 hhh (tribe, _) =
     let Warrior soul agent = tribe M.! "Heinz"
-        (amount, phase, position) = melee agent
+        MeleeData amount phase position = melee agent
     in  (M.singleton "Heinz" $ Warrior soul $
-            agent {melee = (amount,
-                            (phase + 1) `mod` meleeDuration, position) },
+            agent {melee = MeleeData amount
+                                     ((phase + 1) `mod` meleeDuration)
+                                     position },
          M.empty)
 
 
