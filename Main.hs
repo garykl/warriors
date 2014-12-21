@@ -1,5 +1,7 @@
 module Main where
 
+import qualified Data.Map as M
+
 
 main :: IO ()
 main = do
@@ -7,10 +9,10 @@ main = do
     putStrLn "--------------------"
 
 
-data Class = Viking | Wizard
+data Class = MeleeWarrior | Wizard
 
 data Soul = Soul { figureClass :: Class,
-                   initiative :: Double,
+                   -- initiative :: Rational,
                    velocity :: Double,
                    vitality :: Double,
                    strength :: Double }
@@ -18,7 +20,7 @@ data Soul = Soul { figureClass :: Class,
 data Agent = Agent { x :: Double,
                      y :: Double,
                      lifepoints :: Double,
-                     melee :: Double,
+                     -- melee :: Double,
                      meleePhase :: Double }
 type Effect = Agent
 
@@ -47,7 +49,7 @@ data Action = Melee Double Double
 ki :: [Environment] -> [Action]
 ki = undefined
 
-type Team = [Warrior]
+type Team = M.Map String Warrior
 
 performAction :: Team -> Team -> (Team, Team)
 performAction = undefined
