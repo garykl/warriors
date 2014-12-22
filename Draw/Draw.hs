@@ -46,9 +46,9 @@ drawWarriors pics ws = Pictures $ map (drawWarrior pics)
                                                 -> compare y1 y2) ws
 
 drawAll :: AllLoadedPictures -> Field -> Picture
-drawAll (AllLoadedPictures generalPics warriorPics) ps =
+drawAll (AllLoadedPictures generalPics warriorPics) field =
     Pictures [drawBackground generalPics,
-              drawWarriors warriorPics (concatMap Map.elems ps)]
+              drawWarriors warriorPics (fieldToListOfWarriors field)]
 
 {--- main loop ---}
 mainLoop :: Field -> (Field -> Field) -> IO ()

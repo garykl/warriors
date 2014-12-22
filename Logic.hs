@@ -68,18 +68,22 @@ instance Addable Agent where
 -- artificial interlligence.
 data Warrior = Warrior Soul Agent
 
+type WarriorName = String
+
 -- | the @Tribe@ is a collection of @Warrior@s. They are thought to be fighting
 -- against another @Tribe@. Additionally, the @Tribe@ gives each Warrior its
 -- identity.
-type Tribe = M.Map String Warrior
+type Tribe = M.Map WarriorName Warrior
 
 -- | each @Warrior@ sees its own environment, that consists of its own @Team@
 -- and the enemy team.
-data Environment = Env [Tribe]
+data Environment = Env Tribe [Tribe]
 
 -- | @Intelligence@ is, when you are able to conclude different actions for
 -- different @Environment@s.
-type Intelligence = String -> Environment -> Action
+type Intelligence = WarriorName -> Environment -> Action
+
+type Intelligences = M.Map TribeName Intelligence
 
 
 -- | @Warrior@s interact with each other and with themselves via @Action@s.
@@ -89,66 +93,80 @@ data Action = Melee Position
             | MoveTo Position
 
 
+type TribeName = String
+
 -- | the @Field@ is given by considering two Teams.
-type Field = [Tribe]
+type Field = M.Map TribeName Tribe
 
 
 -- | a @Warrior@ on the @Field@ can be identified by its name (the key of the
 -- @Tribe@ @M.Map@) and the @Tribe@ number (tribe == fst field <=> 1, ...).
-type WarriorIdentifier = (Int, String)
+type WarriorIdentifier = (TribeName, WarriorName)
 
 
 initialField :: Field
-initialField = [M.singleton "Heinz" $
-    Warrior (Soul MeleeWarrior 1 1 1)
-            (Agent (Pos 0 0) 1 (MeleeData 0 0 (Pos 0 0))), M.empty]
+initialField = M.singleton "Holzfaeller" $
+                   M.singleton "Heinz" $
+                       Warrior (Soul MeleeWarrior 1 1 1)
+                               (Agent (Pos 0 0) 1 (MeleeData 0 0 (Pos 0 0)))
 
 
 hhh :: Field -> Field
-hhh (tribe : _) =
-    let Warrior soul agent = tribe M.! "Heinz"
+hhh field =
+    let Warrior soul agent = field M.! "Holzfaeller" M.! "Heinz"
         MeleeData amount phase position = melee agent
-    in  [M.singleton "Heinz" $ Warrior soul $
-            agent {melee = MeleeData amount
-                                     ((phase + 1) `mod` meleeDuration)
-                                     position },
-         M.empty]
+    in  M.singleton "Holzfaeller" $
+            M.singleton "Heinz" $ Warrior soul $
+                agent {melee = MeleeData amount
+                                         ((phase + 1) `mod` meleeDuration)
+                                         position }
 
 
 -- | each @Warrior@ on the @Field@ can try to act appropriately.
-performActions :: Intelligence -> Intelligence -> Field -> Field
-performActions i1 i2 field =
+performActions :: Intelligences -> Field -> Field
+performActions intelligences field =
     let order = getOrder field  -- TODO: at the moment, its in sequence, later,
-                                   --       there will be the initiative criterion.
+                                --       there will be the initiative criterion.
+        performs = map (`performAction` intelligences) order
+    in  composeAll performs field
+
+
+-- | compose any number of function, for being executed in order.
+composeAll :: [a -> a] -> a -> a
+composeAll [] a = a
+composeAll (f : fs) a = foldr (.) f fs a
+
+
+performAction :: WarriorIdentifier -> Intelligences
+              -> Field -> Field
+performAction (tribename, warriorname) intelligences field =
+    let environment = getEnvironment tribename field
+        action = (intelligences M.! tribename) warriorname environment
     in  field
 
 
-performAction :: String -> Intelligence -> Field -> Field
-performAction name intelligence field =
-    let environment = getEnvironment field
-        action = intelligence name environment
-    in  field
-
-
--- | create the @Environment@ of a @ThinkingWarrior@. This should depend on the
+-- | create the @Environment@ of a @Warrior@. This should depend on the
 -- @Agent@, which dicides how well it is recognized.
--- TODO: implement the idea. current state: everything is recognized as it is.
-getEnvironment :: Field -> Environment
-getEnvironment = Env
+-- TODO: implement the idea. current state: everything is recognized as it is
+-- and only sorted by the tribe.
+getEnvironment :: TribeName -> Field -> Environment
+getEnvironment name field = Env (field M.! name) $ M.elems $ M.delete name field
 
 
--- | extract a @ThinkingWarrior@ out of the @Field@
+-- | extract a @Warrior@ out of the @Field@
 getWarrior :: WarriorIdentifier -> Field -> Warrior
-getWarrior (belonging, name) ts = ts !! belonging M.! name
+getWarrior (belonging, name) ts = ts M.! belonging M.! name
 
 -- | @Warrior@s may be faster of slower.
 -- TODO: implement this idea. current status: random order of @Tribe@ 1 followed
 -- by random order of @Tribe@ 2.
-getOrder :: [Tribe] -> [WarriorIdentifier]
-getOrder ts = concatMap (\(n, t) -> zipWithNumber n $ M.keys t) $ enumerate ts
-  where zipWithNumber :: Int -> [a] -> [(Int, a)]
-        zipWithNumber n ll = zip (replicate (length ll) n) ll
--- zipWithNumber 1 (M.keys t1) ++ zipWithNumber 2 (M.keys t2)
+getOrder :: Field -> [WarriorIdentifier]
+getOrder field =
+    let teamnames = M.keys field
+    in  concatMap (\t -> constantZip t $ M.keys $ field M.! t) teamnames
+  where constantZip :: b -> [a] -> [(b, a)]
+        constantZip n ll = zip (replicate (length ll) n) ll
 
-enumerate :: [a] -> [(Int, a)]
-enumerate ll = zip [0 .. length ll] ll
+
+fieldToListOfWarriors :: Field -> [Warrior]
+fieldToListOfWarriors field = concatMap M.elems $ M.elems field
