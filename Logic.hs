@@ -1,6 +1,7 @@
 module Logic where
 
 import qualified Data.Map as M
+import qualified NestedMap as N
 
 
 -- do not make them Num, because of abs, signum and fromInteger
@@ -45,6 +46,9 @@ meleeHitTime = 10
 -- | @Melee@ = (Amount, Phase, Target/Position)
 data MeleeData = MeleeData Float Int Position
 
+emptyMeleeData :: MeleeData
+emptyMeleeData = MeleeData 0 0 $ Pos 0 0
+
 -- | the @Agent@ is the suffering part during the simulation. Values may
 -- constantly change, due to attack, spells or movements.
 data Agent = Agent { position :: Position,
@@ -54,6 +58,13 @@ data Agent = Agent { position :: Position,
 -- | when performing an @Action@, an @Effect@ is generated, that is applied to
 -- the warriors @Agent@.
 type Effect = Agent
+
+
+-- | @emptyEffect@ means no effect
+emptyEffect :: Effect
+emptyEffect = Agent { position = Pos 0 0,
+                      lifepoints = 0,
+                      melee = emptyMeleeData }
 
 -- | an @Agent@ is changed by an @Effect@ by adding certain fields.
 instance Addable Agent where
@@ -96,7 +107,7 @@ data Action = Melee Position
 type TribeName = String
 
 -- | the @Field@ is given by considering two Teams.
-type Field = M.Map TribeName Tribe
+type Field = N.Nmap TribeName WarriorName Warrior -- M.Map TribeName Tribe
 
 
 -- | a @Warrior@ on the @Field@ can be identified by its name (the key of the
@@ -104,30 +115,29 @@ type Field = M.Map TribeName Tribe
 type WarriorIdentifier = (TribeName, WarriorName)
 
 
+inititialWarrior :: Warrior
+inititialWarrior = Warrior (Soul MeleeWarrior 1 1 1)
+                          (Agent (Pos 0 0) 1 (MeleeData 0 0 (Pos 0 0)))
+
 initialField :: Field
-initialField = M.singleton "Holzfaeller" $
-                   M.singleton "Heinz" $
-                       Warrior (Soul MeleeWarrior 1 1 1)
-                               (Agent (Pos 0 0) 1 (MeleeData 0 0 (Pos 0 0)))
+initialField = N.singleton "Holzfaeller" "Heinz" inititialWarrior
 
 
 hhh :: Field -> Field
 hhh field =
-    let Warrior soul agent = field M.! "Holzfaeller" M.! "Heinz"
+    let Warrior soul agent = field N.! ("Holzfaeller", "Heinz")
         MeleeData amount phase position = melee agent
-    in  M.singleton "Holzfaeller" $
-            M.singleton "Heinz" $ Warrior soul $
-                agent {melee = MeleeData amount
+    in  N.singleton "Holzfaeller" "Heinz"
+            $ Warrior soul
+                    $ agent {melee = MeleeData amount
                                          ((phase + 1) `mod` meleeDuration)
                                          position }
 
 
 -- | each @Warrior@ on the @Field@ can try to act appropriately.
-performActions :: Intelligences -> Field -> Field
-performActions intelligences field =
-    let order = getOrder field  -- TODO: at the moment, its in sequence, later,
-                                --       there will be the initiative criterion.
-        performs = map (`performAction` intelligences) order
+performTimestep :: Intelligences -> Field -> Field
+performTimestep intelligences field =
+    let performs = map (`chooseAndPerformAction` intelligences) $ getOrder field
     in  composeAll performs field
 
 
@@ -137,12 +147,25 @@ composeAll [] a = a
 composeAll (f : fs) a = foldr (.) f fs a
 
 
-performAction :: WarriorIdentifier -> Intelligences
-              -> Field -> Field
-performAction (tribename, warriorname) intelligences field =
+chooseAction :: WarriorIdentifier -> Intelligence -> Field -> Action
+chooseAction wid@(tribename, warriorname) intelligence field =
     let environment = getEnvironment tribename field
-        action = (intelligences M.! tribename) warriorname environment
+    in  intelligence warriorname environment
+
+chooseAndPerformAction :: WarriorIdentifier -> Intelligences -> Field -> Field
+chooseAndPerformAction wid@(tribename, _) intelligences field =
+    let action = chooseAction wid $ intelligences M.! tribename
     in  field
+
+
+-- | for knowing what the @Effect@ of an @Action@ is, we need the @Field@,
+-- the @Warrior@ tht performs the @Action@ and the @Action@ itself. Multiple
+-- target may be affected (-> keys are @WarriorIdentifier@s) and the effect
+-- may be in the future (-> values are lists of @Effect@s).
+actionToEffects :: Field -> Warrior -> Action
+                -> N.Nmap TribeName WarriorName [Effect]
+actionToEffects field warrior (Melee _) = N.empty
+actionToEffects field warrior (MoveTo _) = N.empty
 
 
 -- | create the @Environment@ of a @Warrior@. This should depend on the
@@ -150,23 +173,20 @@ performAction (tribename, warriorname) intelligences field =
 -- TODO: implement the idea. current state: everything is recognized as it is
 -- and only sorted by the tribe.
 getEnvironment :: TribeName -> Field -> Environment
-getEnvironment name field = Env (field M.! name) $ M.elems $ M.delete name field
+getEnvironment name field = Env (N.elem name field)
+                              $ N.elems $ N.deleteRough name field
 
 
 -- | extract a @Warrior@ out of the @Field@
 getWarrior :: WarriorIdentifier -> Field -> Warrior
-getWarrior (belonging, name) ts = ts M.! belonging M.! name
+getWarrior wid field = field N.! wid
 
 -- | @Warrior@s may be faster of slower.
 -- TODO: implement this idea. current status: random order of @Tribe@ 1 followed
 -- by random order of @Tribe@ 2.
 getOrder :: Field -> [WarriorIdentifier]
-getOrder field =
-    let teamnames = M.keys field
-    in  concatMap (\t -> constantZip t $ M.keys $ field M.! t) teamnames
-  where constantZip :: b -> [a] -> [(b, a)]
-        constantZip n ll = zip (replicate (length ll) n) ll
+getOrder = N.keys
 
 
 fieldToListOfWarriors :: Field -> [Warrior]
-fieldToListOfWarriors field = concatMap M.elems $ M.elems field
+fieldToListOfWarriors = N.elemsDeep
