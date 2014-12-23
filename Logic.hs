@@ -58,11 +58,33 @@ data Agent = Agent { position :: Position,
 -- | when performing an @Action@, an @Effect@ is generated, that is applied to
 -- the warriors @Agent@.
 data Effect = Effect (Agent -> Agent)
+type Effects = N.Nmap TribeName WarriorName [Effect]
 
 
 -- | @emptyEffect@ means no effect
 emptyEffect :: Effect
 emptyEffect = Effect id
+
+
+-- | effects are added by composing immediate effects, later effects, and so on.
+composeEffects :: Effects -> Effects -> Effects
+composeEffects = N.zipWith listCompose
+  where
+    listCompose :: [Effect] -> [Effect] -> [Effect]
+    listCompose es1 es2 =
+        let maxnum = max (length es1) (length es2)
+        in  zipWith (\(Effect e1) (Effect e2) -> Effect (e1 . e2))
+                    (constrainLength maxnum emptyEffect es1)
+                    (constrainLength maxnum emptyEffect es2)
+
+
+-- | cut a list if it is too long or fill it with default elements if it is
+-- too short
+constrainLength :: Int -> a -> [a] -> [a]
+constrainLength n l ll =
+    let num = length ll
+    in  if n > num then ll ++ replicate (n - num) l
+                   else take n ll
 
 -- | an @Agent@ is changed by an @Effect@ by adding certain fields.
 instance Addable Agent where
@@ -90,9 +112,8 @@ data Environment = Env Tribe [Tribe]
 
 -- | @Intelligence@ is, when you are able to conclude different actions for
 -- different @Environment@s.
-type Intelligence = WarriorName -> Environment -> Action
-
-type Intelligences = M.Map TribeName Intelligence
+type Intelligence = Environment -> Action
+type Intelligences = N.Nmap TribeName WarriorName Intelligence
 
 
 -- | @Warrior@s interact with each other and with themselves via @Action@s.
@@ -145,14 +166,19 @@ composeAll [] a = a
 composeAll (f : fs) a = foldr (.) f fs a
 
 
-chooseAction :: WarriorIdentifier -> Intelligence -> Field -> Action
-chooseAction wid@(tribename, warriorname) intelligence field =
-    let environment = getEnvironment tribename field
-    in  intelligence warriorname environment
+chooseAction :: WarriorIdentifier -> Intelligences -> Field -> Action
+chooseAction wid intelligence field =
+    intelligence N.! wid $ getEnvironment wid field
+
 
 chooseAndPerformAction :: WarriorIdentifier -> Intelligences -> Field -> Field
-chooseAndPerformAction wid@(tribename, _) intelligences field =
-    let action = chooseAction wid $ intelligences M.! tribename
+chooseAndPerformAction wid intelligences field =
+    let action = chooseAction wid intelligences field
+        warrior = field N.! wid
+        effects = actionToEffects field warrior action
+        -- TODO:
+        -- effects should be added to already existing effects
+        -- then the nearest effects should be applied
     in  field
 
 
@@ -160,8 +186,7 @@ chooseAndPerformAction wid@(tribename, _) intelligences field =
 -- the @Warrior@ tht performs the @Action@ and the @Action@ itself. Multiple
 -- target may be affected (-> keys are @WarriorIdentifier@s) and the effect
 -- may be in the future (-> values are lists of @Effect@s).
-actionToEffects :: Field -> Warrior -> Action
-                -> N.Nmap TribeName WarriorName [Effect]
+actionToEffects :: Field -> Warrior -> Action -> Effects
 actionToEffects field warrior (Melee _) = N.empty
 actionToEffects field warrior (MoveTo _) = N.empty
 
@@ -170,9 +195,10 @@ actionToEffects field warrior (MoveTo _) = N.empty
 -- @Agent@, which dicides how well it is recognized.
 -- TODO: implement the idea. current state: everything is recognized as it is
 -- and only sorted by the tribe.
-getEnvironment :: TribeName -> Field -> Environment
-getEnvironment name field = Env (N.elem name field)
-                              $ N.elems $ N.deleteRough name field
+getEnvironment :: WarriorIdentifier -> Field -> Environment
+getEnvironment wid@(tribename, _) field =  -- TODO: warriorname will be used to determine the blurring!
+    Env (N.elem tribename field)
+       $ N.elems $ N.deleteRough tribename field
 
 
 -- | extract a @Warrior@ out of the @Field@
