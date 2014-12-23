@@ -39,7 +39,7 @@ keys (Nmap nmap) = concatMap (\t -> constantZip t $ M.keys $ nmap M.! t)
 elems :: Nmap a b c -> [M.Map b c]
 elems (Nmap nmap) = M.elems nmap
 
-elemsDeep :: (Ord a) => Nmap a b c -> [c]
+elemsDeep :: (Ord a, Ord b) => Nmap a b c -> [c]
 elemsDeep (Nmap nmap) = concatMap M.elems $ M.elems nmap
 
 
@@ -81,7 +81,8 @@ key ~<~ f = f ~>~ key
 delete :: (Ord a, Ord b) => (a, b) -> Nmap a b c -> Nmap a b c
 delete (a, b) (Nmap nmap) =
     let sub = M.delete b $ nmap M.! a
-    in  Nmap $ M.insert a sub nmap
+    in  Nmap $ if M.null sub then M.delete a nmap
+                             else M.insert a sub nmap
 
 
 deleteRough :: (Ord a) => a -> Nmap a b c -> Nmap a b c
