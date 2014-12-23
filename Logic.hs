@@ -3,24 +3,7 @@ module Logic where
 import qualified Data.Map as M
 import qualified NestedMap as N
 
-
--- do not make them Num, because of abs, signum and fromInteger
-data Position = Pos Float Float deriving Show
-data Vector = Vec Float Float
-
-class Addable a where
-    (|+|) :: a -> a -> a
-    (|-|) :: a -> a -> a
-
-instance Addable Position where
-    Pos x1 y1 |+| Pos x2 y2 = Pos (x1 + x2) (y1 + y2)
-    Pos x1 y1 |-| Pos x2 y2 = Pos (x1 - x2) (y1 - y2)
-
-instance Addable MeleeData where
-    MeleeData a1 p1 pos1 |+| MeleeData a2 p2 pos2 =
-        MeleeData (a1 + a2) (p1 + p2) (pos1 |+| pos2)
-    MeleeData a1 p1 pos1 |-| MeleeData a2 p2 pos2 =
-        MeleeData (a1 - a2) (p1 - p2) (pos1 |-| pos2)
+import Geometry
 
 
 -- | represent different classes of warriors. Mainly interesting for drawing,
@@ -57,26 +40,15 @@ data Agent = Agent { position :: Position,
 
 -- | when performing an @Action@, an @Effect@ is generated, that is applied to
 -- the warriors @Agent@.
-type Effect = Agent
+type Effect = Agent -> Agent
 
 
 -- | @emptyEffect@ means no effect
 emptyEffect :: Effect
-emptyEffect = Agent { position = Pos 0 0,
-                      lifepoints = 0,
-                      melee = emptyMeleeData }
-
--- | an @Agent@ is changed by an @Effect@ by adding certain fields.
-instance Addable Agent where
-    agent |+| effect = agent { position = position agent |+| position effect,
-                               lifepoints = lifepoints agent + lifepoints effect,
-                               melee = melee agent |+| melee effect }
-    agent |-| effect = agent { position = position agent |-| position effect,
-                               lifepoints = lifepoints agent - lifepoints effect,
-                               melee = melee agent |-| melee effect }
+emptyEffect = id
 
 -- | the @Warrior@ is a virtual robot in arbitrary form, with an associating
--- artificial interlligence.
+-- artificial intelligence.
 data Warrior = Warrior Soul Agent
 
 type WarriorName = String

@@ -1,26 +1,33 @@
-module Draw.MeleeWarrior(loadPictures,drawWarrior) where
+module Draw.MeleeWarrior(warriorPictureFileList,drawWarrior) where
 
-import Graphics.Gloss
-import Graphics.Gloss.Data.ViewPort
+import qualified Data.Map as Map
+
+import qualified Graphics.Gloss as Gloss
 
 import Logic
 import Draw.DrawTypes
 
---main :: IO ()
---main = do
---    pic <- loadBMP "Figure.bmp"
-----    display (InWindow "Warriors" (400, 550) (10, 10))
-----            white
-----            pic
---    simulate (InWindow "Warriors" (800, 550) (10, 10))
---              green
---              24
---              0
---              (draw pic)
---              timestep
 
-loadPictures :: IO LoadedPictures
-loadPictures = sequence [loadBMP "Draw/MeleeWarrior/Figure.svg.bmp"]
+figure = 1
+figureSize = Vec 122 160
+maceAnchorInFigure = Vec 28 129
+maceAnchorRelPosInFigure = maceAnchorInFigure - 0.5 * figureSize
+
+mace = 2
+maceSize = Vec 42 166
+maceAnchorInMace = Vec 16 154
+
+negMaceAnchorRelPosInMace = 0.5 * maceSize - maceAnchorInMace
+
+warriorPictureFileList :: PictureFileList
+warriorPictureFileList = [
+    (figure, "MeleeWarrior/Figure.bmp"),
+    (mace, "MeleeWarrior/mace.bmp")
+  ]
+
+drawMace :: LoadedPictures -> Position -> Float -> Gloss.Picture
+drawMace pics p angle = movePictureBy (p+maceAnchorRelPosInFigure) $ Gloss.rotate angle $
+                            movePictureBy negMaceAnchorRelPosInMace $ pics mace
 
 drawWarrior :: WarriorDrawer
-drawWarrior pics (Warrior _ (Agent (Pos x y) _ _)) = translate x y (head pics)
+drawWarrior pics (Warrior _ (Agent p _ _)) = Gloss.Pictures [movePictureBy p (pics figure), drawMace pics p 0.5]

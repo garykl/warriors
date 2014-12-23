@@ -2,8 +2,10 @@ module Draw.Draw(mainLoop) where
 
 import qualified Data.Map as Map
 import Data.List (sortBy)
+import qualified Data.Traversable as Traversable
 
 import Graphics.Gloss
+import Graphics.Gloss.Data.Color
 import Graphics.Gloss.Data.ViewPort
 
 import Logic
@@ -12,18 +14,26 @@ import Draw.DrawTypes
 import qualified Draw.MeleeWarrior as MW
 
 {--- load pictures for each warrior ---}
-loadWarriorPictures :: WarriorClass -> IO LoadedPictures
-loadWarriorPictures wc
-        | wc==MeleeWarrior = MW.loadPictures
-        | otherwise        = error ("No picture load function defined for WarriorClass \"" ++ show wc ++ "\"!")
+picturesBasePath = "Draw/"
 
-loadGeneralPictures :: IO LoadedPictures
-loadGeneralPictures = return []
+generalPictureFileList :: PictureFileList
+generalPictureFileList = []
+
+warriorPictureFileList :: WarriorClass -> PictureFileList
+warriorPictureFileList wc
+        | wc==MeleeWarrior = MW.warriorPictureFileList
+        | otherwise        = error ("No warrior picture file list defined for WarriorClass \"" ++ show wc ++ "\"!")
+
+loadPictures :: PictureFileList -> IO LoadedPictures
+loadPictures pfl = (Traversable.sequence $
+              Map.fromList $
+              map (\t -> (fst t, loadBMP $ (picturesBasePath ++ snd t))) pfl)
+        >>= return.(Map.!) -- IO Map to IO function
 
 loadAllPictures :: IO AllLoadedPictures
 loadAllPictures = do
-    generalPics <- loadGeneralPictures
-    warriorPics <- sequence $ map loadWarriorPictures [minBound :: WarriorClass ..]
+    generalPics <- loadPictures generalPictureFileList
+    warriorPics <- sequence $ map (loadPictures.warriorPictureFileList) [minBound :: WarriorClass ..]
     return $ AllLoadedPictures generalPics (Map.fromList $ zip [minBound :: WarriorClass ..] warriorPics)
 
 {--- drawing ---}
@@ -55,7 +65,7 @@ mainLoop :: Field -> (Field -> Field) -> IO ()
 mainLoop initialField performAction = do
         pics <- loadAllPictures
         simulate (InWindow "Warriors" (800, 550) (10, 10))
-              green
+              (makeColor 0.0 0.5 0.0 1.0)
               24
               initialField
               (drawAll pics)
