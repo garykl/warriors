@@ -57,14 +57,12 @@ data Agent = Agent { position :: Position,
 
 -- | when performing an @Action@, an @Effect@ is generated, that is applied to
 -- the warriors @Agent@.
-type Effect = Agent
+data Effect = Effect (Agent -> Agent)
 
 
 -- | @emptyEffect@ means no effect
 emptyEffect :: Effect
-emptyEffect = Agent { position = Pos 0 0,
-                      lifepoints = 0,
-                      melee = emptyMeleeData }
+emptyEffect = Effect id
 
 -- | an @Agent@ is changed by an @Effect@ by adding certain fields.
 instance Addable Agent where
