@@ -16,12 +16,6 @@ instance Addable Position where
     Pos x1 y1 |+| Pos x2 y2 = Pos (x1 + x2) (y1 + y2)
     Pos x1 y1 |-| Pos x2 y2 = Pos (x1 - x2) (y1 - y2)
 
-instance Addable MeleeData where
-    MeleeData a1 p1 pos1 |+| MeleeData a2 p2 pos2 =
-        MeleeData (a1 + a2) (p1 + p2) (pos1 |+| pos2)
-    MeleeData a1 p1 pos1 |-| MeleeData a2 p2 pos2 =
-        MeleeData (a1 - a2) (p1 - p2) (pos1 |-| pos2)
-
 
 -- | represent different classes of warriors. Mainly interesting for drawing,
 -- but there are possible use cases for the logic, like usage of certain
@@ -43,17 +37,14 @@ meleeDuration = 15
 meleeHitTime :: Int
 meleeHitTime = 10
 
--- | @Melee@ = (Amount, Phase, Target/Position)
-data MeleeData = MeleeData Float Int Position
 
-emptyMeleeData :: MeleeData
-emptyMeleeData = MeleeData 0 0 $ Pos 0 0
+data ActionStatus = Moving | MeleeAttacking Float Int Position
 
 -- | the @Agent@ is the suffering part during the simulation. Values may
 -- constantly change, due to attack, spells or movements.
 data Agent = Agent { position :: Position,
                      lifepoints :: Float,
-                     melee :: MeleeData }
+                     actionStatus :: ActionStatus }
 
 -- | when performing an @Action@, an @Effect@ is generated, that is applied to
 -- the warriors @Agent@.
@@ -64,6 +55,10 @@ type Effects = N.Nmap TribeName WarriorName [Effect]
 -- | @emptyEffect@ means no effect
 emptyEffect :: Effect
 emptyEffect = Effect id
+
+
+emptyEffects :: [WarriorIdentifier] -> Effects
+emptyEffects is = composeAll (map ((N.->-) []) is) N.empty
 
 
 -- | effects are added by composing immediate effects, later effects, and so on.
@@ -78,6 +73,19 @@ composeEffects = N.zipWith listCompose
                     (constrainLength maxnum emptyEffect es2)
 
 
+
+applyEffects :: Effects -> Field -> (Effects, Field)
+applyEffects effects field = N.unzip $ N.zipWith applyEffectList effects field
+  where
+    applyEffectList :: [Effect] -> Warrior -> ([Effect], Warrior)
+    applyEffectList [] warrior = ([], warrior)
+    applyEffectList effects warrior =
+        (tail effects, applyEffect (head effects) warrior)
+            where applyEffect :: Effect -> Warrior -> Warrior
+                  applyEffect (Effect effect) (Warrior soul agent) =
+                      Warrior soul (effect agent)
+
+
 -- | cut a list if it is too long or fill it with default elements if it is
 -- too short
 constrainLength :: Int -> a -> [a] -> [a]
@@ -86,14 +94,6 @@ constrainLength n l ll =
     in  if n > num then ll ++ replicate (n - num) l
                    else take n ll
 
--- | an @Agent@ is changed by an @Effect@ by adding certain fields.
-instance Addable Agent where
-    agent |+| effect = agent { position = position agent |+| position effect,
-                               lifepoints = lifepoints agent + lifepoints effect,
-                               melee = melee agent |+| melee effect }
-    agent |-| effect = agent { position = position agent |-| position effect,
-                               lifepoints = lifepoints agent - lifepoints effect,
-                               melee = melee agent |-| melee effect }
 
 -- | the @Warrior@ is a virtual robot in arbitrary form, with an associating
 -- artificial interlligence.
@@ -136,7 +136,7 @@ type WarriorIdentifier = (TribeName, WarriorName)
 
 inititialWarrior :: Warrior
 inititialWarrior = Warrior (Soul MeleeWarrior 1 1 1)
-                          (Agent (Pos 0 0) 1 (MeleeData 0 0 (Pos 0 0)))
+                           (Agent (Pos 0 0) 1 (MeleeAttacking 0 0 (Pos 0 0)))
 
 initialField :: Field
 initialField = N.singleton "Holzfaeller" "Heinz" inititialWarrior
@@ -145,19 +145,24 @@ initialField = N.singleton "Holzfaeller" "Heinz" inititialWarrior
 hhh :: Field -> Field
 hhh field =
     let Warrior soul agent = field N.! ("Holzfaeller", "Heinz")
-        MeleeData amount phase position = melee agent
+        MeleeAttacking amount phase position = actionStatus agent
     in  N.singleton "Holzfaeller" "Heinz"
             $ Warrior soul
-                    $ agent {melee = MeleeData amount
-                                         ((phase + 1) `mod` meleeDuration)
-                                         position }
+                    $ agent {actionStatus =
+                        MeleeAttacking amount
+                                       ((phase + 1) `mod` meleeDuration)
+                                       position }
 
 
 -- | each @Warrior@ on the @Field@ can try to act appropriately.
 performTimestep :: Intelligences -> Field -> Field
 performTimestep intelligences field =
-    let performs = map (`chooseAndPerformAction` intelligences) $ getOrder field
-    in  composeAll performs field
+    let performs = map (\wid -> chooseAndPerformAction
+                                    wid
+                                    (emptyEffects (N.keys field))
+                                    intelligences)
+                     $ getOrder field
+    in  composeAllSnd performs field
 
 
 -- | compose any number of function, for being executed in order.
@@ -165,21 +170,24 @@ composeAll :: [a -> a] -> a -> a
 composeAll [] a = a
 composeAll (f : fs) a = foldr (.) f fs a
 
+composeAllSnd :: [a -> (b, a)] -> a -> a
+composeAllSnd fs = composeAll $ map (snd .) fs
+
 
 chooseAction :: WarriorIdentifier -> Intelligences -> Field -> Action
 chooseAction wid intelligence field =
     intelligence N.! wid $ getEnvironment wid field
 
 
-chooseAndPerformAction :: WarriorIdentifier -> Intelligences -> Field -> Field
-chooseAndPerformAction wid intelligences field =
+chooseAndPerformAction :: WarriorIdentifier -> Effects -> Intelligences
+                       -> Field -> (Effects, Field)
+chooseAndPerformAction wid effects intelligences field =
     let action = chooseAction wid intelligences field
         warrior = field N.! wid
-        effects = actionToEffects field warrior action
+        newEffects = actionToEffects field warrior action
         -- TODO:
-        -- effects should be added to already existing effects
         -- then the nearest effects should be applied
-    in  field
+    in  (composeEffects effects newEffects, field)
 
 
 -- | for knowing what the @Effect@ of an @Action@ is, we need the @Field@,
@@ -187,8 +195,8 @@ chooseAndPerformAction wid intelligences field =
 -- target may be affected (-> keys are @WarriorIdentifier@s) and the effect
 -- may be in the future (-> values are lists of @Effect@s).
 actionToEffects :: Field -> Warrior -> Action -> Effects
-actionToEffects field warrior (Melee _) = N.empty
-actionToEffects field warrior (MoveTo _) = N.empty
+actionToEffects field warrior (Melee _) = emptyEffects $ N.keys field
+actionToEffects field warrior (MoveTo _) = emptyEffects $ N.keys field
 
 
 -- | create the @Environment@ of a @Warrior@. This should depend on the

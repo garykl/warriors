@@ -1,6 +1,7 @@
 module NestedMap where
 
 
+import Prelude hiding (map, zipWith, unzip)
 import qualified Data.Map as M
 import qualified Data.List as L
 
@@ -35,6 +36,14 @@ keys (Nmap nmap) = concatMap (\t -> constantZip t $ M.keys $ nmap M.! t)
                            $ M.keys nmap
   where constantZip :: b -> [a] -> [(b, a)]
         constantZip n ll = zip (replicate (length ll) n) ll
+
+
+keysFromMap :: Ord a =>  M.Map a [b] -> [(a, b)]
+keysFromMap m =
+    let outerkeys = M.keys m
+    in  concatMap (\o -> let is = m M.! o
+                         in  zip (replicate (length is) o) is) outerkeys
+
 
 
 elems :: Nmap a b c -> [M.Map b c]
@@ -98,8 +107,19 @@ zipWith f (Nmap n1) (Nmap n2) =
 
     let outerkeys = M.keys n1 `L.intersect` M.keys n2
     in  Nmap . M.fromList
-            $ map (\o -> (o, innerZipWith (n1 M.! o) (n2 M.! o))) outerkeys
+            $ L.map (\o -> (o, innerZipWith (n1 M.! o) (n2 M.! o))) outerkeys
 
   where innerZipWith m1 m2 =
             let innerkeys = M.keys m1 `L.intersect` M.keys m2
-            in  M.fromList $ map (\i -> (i, f (m1 M.! i) (m2 M.! i))) innerkeys
+            in  M.fromList $ L.map (\i -> (i, f (m1 M.! i) (m2 M.! i))) innerkeys
+
+
+unzip :: (Ord a, Ord b) => Nmap a b (c, d) -> (Nmap a b c, Nmap a b d)
+unzip nmap = (map fst nmap, map snd nmap)
+
+
+map :: (Ord a, Ord b) => (c -> d) -> Nmap a b c -> Nmap a b d
+map f nmap =
+    let ks = keys nmap
+        vs = L.map (f . (!) nmap) ks
+    in  foldr (.) id (L.zipWith (-<-) ks vs) empty
