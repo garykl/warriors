@@ -8,6 +8,7 @@ import Graphics.Gloss
 import Graphics.Gloss.Data.Color
 import Graphics.Gloss.Data.ViewPort
 
+import Geometry
 import Logic
 
 import Draw.DrawTypes

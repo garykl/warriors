@@ -15,11 +15,29 @@ Vec x1 y1 |-| Vec x2 y2 = Vec (x1-x2) (y1-y2)
 (|*|) :: Float -> Vector -> Vector
 c |*| Vec x y = Vec (c*x) (c*y)
 
+angleOfVector :: Vector -> Float
+angleOfVector (Vec x y) = atan2 y x
+
+radToDeg :: Float -> Float
+radToDeg = (*(180/pi))
+
 
 
 data Position = Pos Float Float deriving Show
 
+positionOrigin = Pos 0.0 0.0
 
+(.+) :: Position -> Vector -> Position
+(Pos x y) .+ (Vec dx dy) = Pos (x + dx) (y + dy)
+
+(+.) :: Vector -> Position -> Position
+v +. p = p .+ v
+
+(.-) :: Position -> Vector -> Position
+(Pos x y) .- (Vec dx dy) = Pos (x - dx) (y - dy)
+
+(.-.) :: Position -> Position -> Vector
+(Pos x1 y1) .-. (Pos x2 y2) = Vec (x1 - x2) (y1 - y2)
 
 
 --class Addable a where

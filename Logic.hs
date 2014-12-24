@@ -24,19 +24,18 @@ meleeDuration :: Int
 meleeDuration = 15
 
 meleeHitTime :: Int
-meleeHitTime = 10
+meleeHitTime = 5
 
--- | @Melee@ = (Amount, Phase, Target/Position)
-data MeleeData = MeleeData Float Int Position
-
-emptyMeleeData :: MeleeData
-emptyMeleeData = MeleeData 0 0 $ Pos 0 0
+-- | @ActionStatus@ is either
+-- Moving or
+-- MeleeData: Amount, Phase, Target relative to attackers position
+data ActionStatus = Moving | MeleeAttacking Float Int Vector
 
 -- | the @Agent@ is the suffering part during the simulation. Values may
 -- constantly change, due to attack, spells or movements.
 data Agent = Agent { position :: Position,
                      lifepoints :: Float,
-                     melee :: MeleeData }
+                     actionStatus :: ActionStatus }
 
 -- | when performing an @Action@, an @Effect@ is generated, that is applied to
 -- the warriors @Agent@.
@@ -72,8 +71,8 @@ type Intelligences = M.Map TribeName Intelligence
 -- | @Warrior@s interact with each other and with themselves via @Action@s.
 -- @Action@s are converted into @Effect@s, which are then added to the
 -- @Agent@s.
-data Action = Melee Position
-            | MoveTo Position
+data Action = Melee Vector  -- relative to attackers position
+            | MoveTo Position -- absolute position of the aim
 
 
 type TribeName = String
@@ -89,7 +88,10 @@ type WarriorIdentifier = (TribeName, WarriorName)
 
 inititialWarrior :: Warrior
 inititialWarrior = Warrior (Soul MeleeWarrior 1 1 1)
-                          (Agent (Pos 0 0) 1 (MeleeData 0 0 (Pos 0 0)))
+                          (Agent (Pos 0 0) 1 (MeleeAttacking 0 0 (Vec (0-100) (0+10))))
+--                          (Agent (Pos 0 0) 1 (MeleeAttacking 0 0 (Vec (0-100) (0-70))))
+--                          (Agent (Pos 0 0) 1 (MeleeAttacking 0 0 (Vec (50) (10))))
+--                          (Agent (Pos 0 0) 1 (MeleeAttacking 0 0 (Vec (50) (0-70))))
 
 initialField :: Field
 initialField = N.singleton "Holzfaeller" "Heinz" inititialWarrior
@@ -98,10 +100,10 @@ initialField = N.singleton "Holzfaeller" "Heinz" inititialWarrior
 hhh :: Field -> Field
 hhh field =
     let Warrior soul agent = field N.! ("Holzfaeller", "Heinz")
-        MeleeData amount phase position = melee agent
+        MeleeAttacking amount phase position = actionStatus agent
     in  N.singleton "Holzfaeller" "Heinz"
             $ Warrior soul
-                    $ agent {melee = MeleeData amount
+                    $ agent {actionStatus = MeleeAttacking amount
                                          ((phase + 1) `mod` meleeDuration)
                                          position }
 
