@@ -88,7 +88,7 @@ type WarriorIdentifier = (TribeName, WarriorName)
 
 inititialWarrior :: Warrior
 inititialWarrior = Warrior (Soul MeleeWarrior 1 1 1)
-                          (Agent (Pos 0 0) 1 (MeleeAttacking 0 0 (Vec (0-100) (0+10))))
+                          (Agent (Pos 200 50) 1 (MeleeAttacking 0 0 (Vec (0-100) (0+10))))
 --                          (Agent (Pos 0 0) 1 (MeleeAttacking 0 0 (Vec (0-100) (0-70))))
 --                          (Agent (Pos 0 0) 1 (MeleeAttacking 0 0 (Vec (50) (10))))
 --                          (Agent (Pos 0 0) 1 (MeleeAttacking 0 0 (Vec (50) (0-70))))
