@@ -32,15 +32,15 @@ warriorPictureFileList = [
   ]
 
 {--- mace stuff ---}
-maceAngleForMovingAction = 30
+maceAngleForMovingAction = 30 -- in degrees
 
 meleeMaceHitDuration = round $ 0.05 * fromIntegral meleeDuration
 meleeHitTimePlusMaceDelay = meleeHitTime + meleeMaceHitDuration
-maxMaceAngleDiffForMeleeAction = 45
-maceAngleOffsetForMeleeAction = 6
+maxMaceAngleDiffForMeleeAction = 45 -- in degress
+maceAngleOffsetForMeleeAction = 6 -- in drgrees
 
-maceAngleDynamics :: Int -> Float
-maceAngleDynamics phase
+maceAngleDynamicsInDeg :: Int -> Float
+maceAngleDynamicsInDeg phase
   | phase<meleeHitTime
       = (1.0 - (fromIntegral phase)/(fromIntegral meleeHitTime))
               * maxMaceAngleDiffForMeleeAction
@@ -53,22 +53,25 @@ maceAngleDynamics phase
 
 maceAngleInDegForMeleeAction :: Int -> Float -> Float
 maceAngleInDegForMeleeAction phase baseAngle
-  | ((n `mod` 2) == 0) = baseAngle
-      + maceAngleOffsetForMeleeAction + maceAngleDynamics phase
-  | ((n `mod` 2) == 1) = baseAngle
-      - maceAngleOffsetForMeleeAction - maceAngleDynamics phase
+  | ((n `mod` 2) == 0) =
+      baseAngle + maceAngleOffsetForMeleeAction + maceAngleDynamicsInDeg phase
+  | ((n `mod` 2) == 1) =
+      baseAngle - maceAngleOffsetForMeleeAction - maceAngleDynamicsInDeg phase
   where n = 4 + round ( baseAngle/180 )
 
-drawMaceAtAngle :: LoadedPictures -> Position -> Float -> Gloss.Picture
-drawMaceAtAngle pics p angle = movePictureTo (p .+ maceAnchorRelPosInFigure) $
-                            Gloss.rotate (90-angle) $
-                            movePictureBy negMaceAnchorRelPosInMace $ pics mace
+drawMaceAtAngleInDeg :: LoadedPictures -> Position -> Float -> Gloss.Picture
+drawMaceAtAngleInDeg pics p angle =
+            movePictureTo (p .+ maceAnchorRelPosInFigure) $
+            Gloss.rotate (90-angle) $
+            movePictureBy negMaceAnchorRelPosInMace $ pics mace
 
 drawMace :: LoadedPictures -> Agent -> Gloss.Picture
-drawMace pics (Agent pos _ Moving) = drawMaceAtAngle pics pos maceAngleForMovingAction
-drawMace pics (Agent pos _ (MeleeAttacking _ phase meleeVec)) = drawMaceAtAngle pics pos $
-            maceAngleInDegForMeleeAction phase $ radToDeg $
-            angleOfVector (meleeVec |-| maceAnchorRelPosInFigure)
+drawMace pics (Agent pos _ Moving) =
+            drawMaceAtAngleInDeg pics pos maceAngleForMovingAction
+drawMace pics (Agent pos _ (MeleeAttacking _ phase meleeVec)) =
+            drawMaceAtAngleInDeg pics pos $
+            maceAngleInDegForMeleeAction phase $
+            radToDeg $ angleOfVector (meleeVec |-| maceAnchorRelPosInFigure)
 
 {--- stars stuff ---}
 meleeStarsDuration = round $ 0.15 * fromIntegral meleeDuration
