@@ -34,10 +34,10 @@ warriorPictureFileList = [
 {--- mace stuff ---}
 maceAngleForMovingAction = 30
 
-meleeMaceHitDuration = round $ 0.15 * fromIntegral meleeDuration
+meleeMaceHitDuration = round $ 0.05 * fromIntegral meleeDuration
 meleeHitTimePlusMaceDelay = meleeHitTime + meleeMaceHitDuration
 maxMaceAngleDiffForMeleeAction = 45
-maceAngleOffsetForMeleeAction = 8
+maceAngleOffsetForMeleeAction = 6
 
 maceAngleDynamics :: Int -> Float
 maceAngleDynamics phase
