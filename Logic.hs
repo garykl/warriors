@@ -68,14 +68,6 @@ constrainLength n l ll =
     in  if n > num then ll ++ replicate (n - num) l
                    else take n ll
 
--- | an @Agent@ is changed by an @Effect@ by adding certain fields.
-instance Addable Agent where
-    agent |+| effect = agent { position = position agent |+| position effect,
-                               lifepoints = lifepoints agent + lifepoints effect,
-                               melee = melee agent |+| melee effect }
-    agent |-| effect = agent { position = position agent |-| position effect,
-                               lifepoints = lifepoints agent - lifepoints effect,
-                               melee = melee agent |-| melee effect }
 
 -- | the @Warrior@ is a virtual robot in arbitrary form, with an associating
 -- artificial intelligence.
