@@ -2,6 +2,7 @@ module NestedMap where
 
 
 import qualified Data.Map as M
+import qualified Data.List as L
 
 
 -- | implement a nested map that is usable as if it is a map of tuples.
@@ -39,7 +40,7 @@ keys (Nmap nmap) = concatMap (\t -> constantZip t $ M.keys $ nmap M.! t)
 elems :: Nmap a b c -> [M.Map b c]
 elems (Nmap nmap) = M.elems nmap
 
-elemsDeep :: (Ord a) => Nmap a b c -> [c]
+elemsDeep :: (Ord a, Ord b) => Nmap a b c -> [c]
 elemsDeep (Nmap nmap) = concatMap M.elems $ M.elems nmap
 
 
@@ -81,8 +82,24 @@ key ~<~ f = f ~>~ key
 delete :: (Ord a, Ord b) => (a, b) -> Nmap a b c -> Nmap a b c
 delete (a, b) (Nmap nmap) =
     let sub = M.delete b $ nmap M.! a
-    in  Nmap $ M.insert a sub nmap
+    in  Nmap $ if M.null sub then M.delete a nmap
+                             else M.insert a sub nmap
 
 
 deleteRough :: (Ord a) => a -> Nmap a b c -> Nmap a b c
 deleteRough key (Nmap nmap) = Nmap $ M.delete key nmap
+
+
+-- | combine the elements of two nested maps by a function. If a key does only
+-- exist in one the maps, the result will not contain that key.
+zipWith :: (Ord a, Ord b) => (c -> d -> e)
+        -> Nmap a b c -> Nmap a b d -> Nmap a b e
+zipWith f (Nmap n1) (Nmap n2) =
+
+    let outerkeys = M.keys n1 `L.intersect` M.keys n2
+    in  Nmap . M.fromList
+            $ map (\o -> (o, innerZipWith (n1 M.! o) (n2 M.! o))) outerkeys
+
+  where innerZipWith m1 m2 =
+            let innerkeys = M.keys m1 `L.intersect` M.keys m2
+            in  M.fromList $ map (\i -> (i, f (m1 M.! i) (m2 M.! i))) innerkeys
