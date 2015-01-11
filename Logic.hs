@@ -181,9 +181,7 @@ chooseAndPerformAction wid effects intelligences field =
     let action = chooseAction wid intelligences field
         warrior = field N.! wid
         newEffects = actionToEffects field warrior action
-        -- TODO:
-        -- then the nearest effects should be applied
-    in  (composeEffects effects newEffects, field)
+    in  applyEffects (composeEffects effects newEffects) field
 
 
 -- | for knowing what the @Effect@ of an @Action@ is, we need the @Field@,
