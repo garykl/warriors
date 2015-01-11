@@ -179,8 +179,7 @@ chooseAndPerformAction :: WarriorIdentifier -> Intelligences
                        -> Effects -> Field -> (Effects, Field)
 chooseAndPerformAction wid intelligences effects field =
     let action = chooseAction wid intelligences field
-        warrior = field N.! wid
-        newEffects = actionToEffects field warrior action
+        newEffects = actionToEffects field wid action
     in  applyEffects (composeEffects effects newEffects) field
 
 
@@ -188,9 +187,15 @@ chooseAndPerformAction wid intelligences effects field =
 -- the @Warrior@ tht performs the @Action@ and the @Action@ itself. Multiple
 -- target may be affected (-> keys are @WarriorIdentifier@s) and the effect
 -- may be in the future (-> values are lists of @Effect@s).
-actionToEffects :: Field -> Warrior -> Action -> Effects
-actionToEffects field warrior (Melee _) = emptyEffects $ N.keys field
-actionToEffects field warrior (MoveTo _) = emptyEffects $ N.keys field
+actionToEffects :: Field -> WarriorIdentifier -> Action -> Effects
+actionToEffects field wid action =
+    let Warrior soul agent = field N.! wid
+    in  case action of
+            Melee _ -> emptyEffects $ N.keys field
+            MoveTo pos ->
+                let direction = normalize $ pos .-. position agent
+                    effect ag = ag { position = position ag .+ (velocity soul |*| direction) }
+                in  [Effect effect] N.->- wid $ emptyEffects $ N.keys field
 
 
 -- | create the @Environment@ of a @Warrior@. This should depend on the

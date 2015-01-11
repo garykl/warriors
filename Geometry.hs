@@ -21,6 +21,10 @@ angleOfVector (Vec x y) = atan2 y x
 radToDeg :: Float -> Float
 radToDeg = (*(180/pi))
 
+normalize :: Vector -> Vector
+normalize (Vec x y) =
+    let l = sqrt (x * x + y * y)
+    in  Vec (x / l) ( y / l)
 
 
 data Position = Pos Float Float deriving Show
