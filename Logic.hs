@@ -3,18 +3,7 @@ module Logic where
 import qualified Data.Map as M
 import qualified NestedMap as N
 
-
--- do not make them Num, because of abs, signum and fromInteger
-data Position = Pos Float Float deriving Show
-data Vector = Vec Float Float
-
-class Addable a where
-    (|+|) :: a -> a -> a
-    (|-|) :: a -> a -> a
-
-instance Addable Position where
-    Pos x1 y1 |+| Pos x2 y2 = Pos (x1 + x2) (y1 + y2)
-    Pos x1 y1 |-| Pos x2 y2 = Pos (x1 - x2) (y1 - y2)
+import Geometry
 
 
 -- | represent different classes of warriors. Mainly interesting for drawing,
@@ -35,10 +24,14 @@ meleeDuration :: Int
 meleeDuration = 15
 
 meleeHitTime :: Int
-meleeHitTime = 10
+meleeHitTime = 5
 
 
-data ActionStatus = Moving | MeleeAttacking Float Int Position
+-- | @ActionStatus@ is either
+-- Moving or
+-- MeleeData: Amount, Phase, Target relative to attackers position
+data ActionStatus = Moving | MeleeAttacking Float Int Vector
+
 
 -- | the @Agent@ is the suffering part during the simulation. Values may
 -- constantly change, due to attack, spells or movements.
@@ -96,7 +89,7 @@ constrainLength n l ll =
 
 
 -- | the @Warrior@ is a virtual robot in arbitrary form, with an associating
--- artificial interlligence.
+-- artificial intelligence.
 data Warrior = Warrior Soul Agent
 
 type WarriorName = String
@@ -119,8 +112,8 @@ type Intelligences = N.Nmap TribeName WarriorName Intelligence
 -- | @Warrior@s interact with each other and with themselves via @Action@s.
 -- @Action@s are converted into @Effect@s, which are then added to the
 -- @Agent@s.
-data Action = Melee Position
-            | MoveTo Position
+data Action = Melee Vector  -- relative to attackers position
+            | MoveTo Position -- absolute position of the aim
 
 
 type TribeName = String
@@ -136,7 +129,10 @@ type WarriorIdentifier = (TribeName, WarriorName)
 
 inititialWarrior :: Warrior
 inititialWarrior = Warrior (Soul MeleeWarrior 1 1 1)
-                           (Agent (Pos 0 0) 1 (MeleeAttacking 0 0 (Pos 0 0)))
+                           (Agent (Pos 200 50) 1 (MeleeAttacking 0 0 (Vec (0-100) (0+10))))
+--                          (Agent (Pos 0 0) 1 (MeleeAttacking 0 0 (Vec (0-100) (0-70))))
+--                          (Agent (Pos 0 0) 1 (MeleeAttacking 0 0 (Vec (50) (10))))
+--                          (Agent (Pos 0 0) 1 (MeleeAttacking 0 0 (Vec (50) (0-70))))
 
 initialField :: Field
 initialField = N.singleton "Holzfaeller" "Heinz" inititialWarrior
