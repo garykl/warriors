@@ -155,8 +155,8 @@ performTimestep :: Intelligences -> Field -> Field
 performTimestep intelligences field =
     let performs = map (\wid -> chooseAndPerformAction
                                     wid
-                                    (emptyEffects (N.keys field))
-                                    intelligences)
+                                    intelligences
+                                    (emptyEffects (N.keys field)))
                      $ getOrder field
     in  composeAllSnd performs field
 
@@ -175,9 +175,9 @@ chooseAction wid intelligence field =
     intelligence N.! wid $ getEnvironment wid field
 
 
-chooseAndPerformAction :: WarriorIdentifier -> Effects -> Intelligences
-                       -> Field -> (Effects, Field)
-chooseAndPerformAction wid effects intelligences field =
+chooseAndPerformAction :: WarriorIdentifier -> Intelligences
+                       -> Effects -> Field -> (Effects, Field)
+chooseAndPerformAction wid intelligences effects field =
     let action = chooseAction wid intelligences field
         warrior = field N.! wid
         newEffects = actionToEffects field warrior action
