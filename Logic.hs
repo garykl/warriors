@@ -127,28 +127,6 @@ type Field = N.Nmap TribeName WarriorName Warrior -- M.Map TribeName Tribe
 type WarriorIdentifier = (TribeName, WarriorName)
 
 
-inititialWarrior :: Warrior
-inititialWarrior = Warrior (Soul MeleeWarrior 1 1 1)
-                           (Agent (Pos 200 50) 1 (MeleeAttacking 0 0 (Vec (0-100) (0+10))))
---                          (Agent (Pos 0 0) 1 (MeleeAttacking 0 0 (Vec (0-100) (0-70))))
---                          (Agent (Pos 0 0) 1 (MeleeAttacking 0 0 (Vec (50) (10))))
---                          (Agent (Pos 0 0) 1 (MeleeAttacking 0 0 (Vec (50) (0-70))))
-
-initialField :: Field
-initialField = N.singleton "Holzfaeller" "Heinz" inititialWarrior
-
-
-hhh :: Field -> Field
-hhh field =
-    let Warrior soul agent = field N.! ("Holzfaeller", "Heinz")
-        MeleeAttacking amount phase position = actionStatus agent
-    in  N.singleton "Holzfaeller" "Heinz"
-            $ Warrior soul
-                    $ agent {actionStatus =
-                        MeleeAttacking amount
-                                       ((phase + 1) `mod` meleeDuration)
-                                       position }
-
 
 -- | each @Warrior@ on the @Field@ can try to act appropriately.
 performTimestep :: Intelligences -> Field -> Field
