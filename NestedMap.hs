@@ -38,6 +38,10 @@ keys (Nmap nmap) = concatMap (\t -> constantZip t $ M.keys $ nmap M.! t)
         constantZip n ll = zip (replicate (length ll) n) ll
 
 
+values :: (Ord a, Ord b) => Nmap a b c -> [c]
+values nmap = L.map (nmap !) $ keys nmap
+
+
 keysFromMap :: Ord a =>  M.Map a [b] -> [(a, b)]
 keysFromMap m =
     let outerkeys = M.keys m

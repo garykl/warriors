@@ -21,9 +21,12 @@ angleOfVector (Vec x y) = atan2 y x
 radToDeg :: Float -> Float
 radToDeg = (*(180/pi))
 
+vectorLength :: Vector -> Float
+vectorLength (Vec x y) = sqrt (x * x + y * y)
+
 normalize :: Vector -> Vector
-normalize (Vec x y) =
-    let l = sqrt (x * x + y * y)
+normalize vec@(Vec x y) =
+    let l = vectorLength vec
     in  Vec (x / l) ( y / l)
 
 

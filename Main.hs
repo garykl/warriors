@@ -1,5 +1,6 @@
 module Main where
 
+import Game
 import Logic
 import Draw.Draw (mainLoop)
 
@@ -8,32 +9,29 @@ import qualified NestedMap as N
 
 
 garyKi :: Intelligence
-garyKi _ = MoveTo (Pos 100 300)
+garyKi _ = MoveTo (Pos 50 50)
+
+mmpiKi :: Intelligence
+mmpiKi _ = Melee (Vec 0 0)
 
 gameKi :: Intelligences
-gameKi = N.singleton "Holzfaeller" "Heinz" garyKi
+gameKi = (("Holzfaeller", "Heinz") N.-<- mmpiKi)
+       . (("Graeber", "Gerhardt") N.-<- garyKi)
+       $ N.empty
 
-initialWarrior :: Warrior
-initialWarrior = Warrior (Soul MeleeWarrior 1 1 1)
-                           (Agent (Pos 200 50) 1 (MeleeAttacking 0 0 (Vec (0-100) (0+10))))
---                          (Agent (Pos 0 0) 1 (MeleeAttacking 0 0 (Vec (0-100) (0-70))))
---                          (Agent (Pos 0 0) 1 (MeleeAttacking 0 0 (Vec (50) (10))))
---                          (Agent (Pos 0 0) 1 (MeleeAttacking 0 0 (Vec (50) (0-70))))
+mmpiWarrior :: Warrior
+mmpiWarrior = Warrior (Soul MeleeWarrior 1 1 1)
+                      (Agent (Pos 50 50) 10 Moving)
+
+garyWarrior :: Warrior
+garyWarrior = Warrior (Soul MeleeWarrior 1 1 1)
+                      (Agent (Pos 400 400) 10 Moving)
 
 initialField :: Field
-initialField = N.singleton "Holzfaeller" "Heinz" initialWarrior
+initialField = (("Holzfaeller", "Heinz") N.-<- mmpiWarrior)
+             . (("Graeber", "Gerhardt") N.-<- garyWarrior)
+             $ N.empty
 
-
-hhh :: Field -> Field
-hhh field =
-    let Warrior soul agent = field N.! ("Holzfaeller", "Heinz")
-        MeleeAttacking amount phase position = actionStatus agent
-    in  N.singleton "Holzfaeller" "Heinz"
-            $ Warrior soul
-                    $ agent {actionStatus =
-                        MeleeAttacking amount
-                                       ((phase + 1) `mod` meleeDuration)
-                                       position }
 
 
 main :: IO ()

@@ -26,6 +26,12 @@ meleeDuration = 15
 meleeHitTime :: Int
 meleeHitTime = 5
 
+meleeDistance :: Float
+meleeDistance = 30
+
+meleeDamage :: Float
+meleeDamage = 1
+
 
 -- | @ActionStatus@ is either
 -- Moving or
@@ -127,18 +133,6 @@ type Field = N.Nmap TribeName WarriorName Warrior -- M.Map TribeName Tribe
 type WarriorIdentifier = (TribeName, WarriorName)
 
 
-
--- | each @Warrior@ on the @Field@ can try to act appropriately.
-performTimestep :: Intelligences -> Field -> Field
-performTimestep intelligences field =
-    let performs = map (\wid -> chooseAndPerformAction
-                                    wid
-                                    intelligences
-                                    (emptyEffects (N.keys field)))
-                     $ getOrder field
-    in  composeAllSnd performs field
-
-
 -- | compose any number of function, for being executed in order.
 composeAll :: [a -> a] -> a -> a
 composeAll [] a = a
@@ -152,28 +146,6 @@ chooseAction :: WarriorIdentifier -> Intelligences -> Field -> Action
 chooseAction wid intelligence field =
     intelligence N.! wid $ getEnvironment wid field
 
-
-chooseAndPerformAction :: WarriorIdentifier -> Intelligences
-                       -> Effects -> Field -> (Effects, Field)
-chooseAndPerformAction wid intelligences effects field =
-    let action = chooseAction wid intelligences field
-        newEffects = actionToEffects field wid action
-    in  applyEffects (composeEffects effects newEffects) field
-
-
--- | for knowing what the @Effect@ of an @Action@ is, we need the @Field@,
--- the @Warrior@ tht performs the @Action@ and the @Action@ itself. Multiple
--- target may be affected (-> keys are @WarriorIdentifier@s) and the effect
--- may be in the future (-> values are lists of @Effect@s).
-actionToEffects :: Field -> WarriorIdentifier -> Action -> Effects
-actionToEffects field wid action =
-    let Warrior soul agent = field N.! wid
-    in  case action of
-            Melee _ -> emptyEffects $ N.keys field
-            MoveTo pos ->
-                let direction = normalize $ pos .-. position agent
-                    effect ag = ag { position = position ag .+ (velocity soul |*| direction) }
-                in  [Effect effect] N.->- wid $ emptyEffects $ N.keys field
 
 
 -- | create the @Environment@ of a @Warrior@. This should depend on the
