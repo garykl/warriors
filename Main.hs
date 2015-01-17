@@ -6,32 +6,28 @@ import Draw.Draw (mainLoop)
 
 import Geometry
 import qualified NestedMap as N
+import qualified Data.Map as M
+
+import qualified Tribes.Garyki as Gary
+import qualified Tribes.Mmpiki as Mmpi
 
 
-garyKi :: Intelligence
-garyKi _ = MoveTo (Pos 50 50)
-
-mmpiKi :: Intelligence
-mmpiKi _ = Melee (Vec 0 0)
-
-gameKi :: Intelligences
-gameKi = (("Holzfaeller", "Heinz") N.-<- mmpiKi)
-       . (("Graeber", "Gerhardt") N.-<- garyKi)
+helper :: ((Warrior, Intelligence) -> c) -> N.Nmap TribeName WarriorName c
+helper f =
+    composeAll
+        ([("Holzfaeller", name) N.-<- f value |
+            (name, value) <- zip (M.keys Mmpi.provide) (M.elems Mmpi.provide)]
+      ++ [("Graeber", name) N.-<- f value |
+            (name, value) <- zip (M.keys Gary.provide) (M.elems Gary.provide)])
        $ N.empty
 
-mmpiWarrior :: Warrior
-mmpiWarrior = Warrior (Soul MeleeWarrior 1 1 1)
-                      (Agent (Pos 50 50) 10 Moving)
 
-garyWarrior :: Warrior
-garyWarrior = Warrior (Soul MeleeWarrior 1 1 1)
-                      (Agent (Pos 400 400) 10 Moving)
+gameKi :: Intelligences
+gameKi = helper snd
+
 
 initialField :: Field
-initialField = (("Holzfaeller", "Heinz") N.-<- mmpiWarrior)
-             . (("Graeber", "Gerhardt") N.-<- garyWarrior)
-             $ N.empty
-
+initialField = helper fst
 
 
 main :: IO ()

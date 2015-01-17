@@ -36,7 +36,7 @@ meleeDamage = 1
 -- | @ActionStatus@ is either
 -- Moving or
 -- MeleeData: Amount, Phase, Target relative to attackers position
-data ActionStatus = Moving | MeleeAttacking Float Int Vector
+data ActionStatus = Faineancing | Moving | MeleeAttacking Float Int Vector
 
 
 -- | the @Agent@ is the suffering part during the simulation. Values may

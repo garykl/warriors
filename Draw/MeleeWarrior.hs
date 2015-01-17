@@ -66,12 +66,12 @@ drawMaceAtAngleInDeg pics p angle =
             movePictureBy negMaceAnchorRelPosInMace $ pics mace
 
 drawMace :: LoadedPictures -> Agent -> Gloss.Picture
-drawMace pics (Agent pos _ Moving) =
-            drawMaceAtAngleInDeg pics pos maceAngleForMovingAction
 drawMace pics (Agent pos _ (MeleeAttacking _ phase meleeVec)) =
             drawMaceAtAngleInDeg pics pos $
             maceAngleInDegForMeleeAction phase $
             radToDeg $ angleOfVector (meleeVec |-| maceAnchorRelPosInFigure)
+drawMace pics (Agent pos _ _) =
+            drawMaceAtAngleInDeg pics pos maceAngleForMovingAction
 
 {--- stars stuff ---}
 meleeStarsDuration = round $ 0.15 * fromIntegral meleeDuration
