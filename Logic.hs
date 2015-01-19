@@ -15,7 +15,7 @@ data WarriorClass = MeleeWarrior
 
 -- | the soul consists of properties, that usually are not changeable
 data Soul = Soul { figureClass :: WarriorClass,
-                   -- initiative :: Rational,
+                   size :: Float,      -- ^ size is relevant for movement
                    velocity :: Float,  -- ^ potential maximum velocity
                    vitality :: Float,  -- ^ influences @Agent@s lifepoints
                    strength :: Float } -- ^ influences @Agent@s melee

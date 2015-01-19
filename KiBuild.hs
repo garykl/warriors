@@ -1,4 +1,4 @@
-module KiBuild (Intelligence, Warrior(Warrior), Soul(Soul), Agent(Agent),
+module KiBuild (Intelligence, Warrior(Warrior), Soul(..), Agent(..),
                 ActionStatus(Faineancing), WarriorClass(..), WarriorName,
                 moveTo, melee) where
 
