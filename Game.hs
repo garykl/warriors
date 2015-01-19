@@ -17,6 +17,7 @@ actionToEffects field wid action =
     in  case action of
 
             Melee vec ->
+
                 let status = actionStatus agent
                     (newStatus, phase) = case status of
                         MeleeAttacking amount phase target ->
@@ -44,12 +45,22 @@ actionToEffects field wid action =
                     ([Effect defenderEffect] N.->- nearestId)
                         $ emptyEffects $ N.keys field
 
+
             MoveTo pos ->
+
+                -- compute what future could bring
                 let direction = normalize $ pos .-. position agent
+                    futurePosition = position agent .+ (velocity soul |*| direction)
+                    futureAgent = agent { position = futurePosition }
                     effect ag = ag {
-                        position = position ag .+ (velocity soul |*| direction),
+                        position = futurePosition,
                         actionStatus = Moving }
-                in  [Effect effect] N.->- wid $ emptyEffects $ N.keys field
+
+                -- check if future is possible and make it eventually
+                in  if O.fieldCross (N.delete wid field)
+                                    (Warrior soul futureAgent)
+                      then emptyEffects $ N.keys field
+                      else [Effect effect] N.->- wid $ emptyEffects $ N.keys field
 
 
 

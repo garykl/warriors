@@ -21,3 +21,16 @@ warriorDistances pos field =
     where distTo :: Position -> Warrior -> Float
           distTo (Pos x y) (Warrior _ agent) =
               vectorLength $ pos .-. position agent
+
+
+agentDistance :: Agent -> Agent -> Float
+agentDistance a1 a2 = vectorLength $ position a1 .-. position a2
+
+
+warriorCross :: Warrior -> Warrior -> Bool
+warriorCross (Warrior sl1 ag1) (Warrior sl2 ag2) =
+    agentDistance ag1 ag2 < size sl1 + size sl2
+
+
+fieldCross :: Field -> Warrior -> Bool
+fieldCross field warrior = any (warriorCross warrior) $ N.elemsDeep field
