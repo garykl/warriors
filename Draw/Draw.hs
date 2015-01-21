@@ -13,6 +13,7 @@ import Logic
 
 import Draw.DrawTypes
 import qualified Draw.MeleeWarrior as MW
+import qualified Draw.Wobble as Wobble
 
 {--- load pictures for each warrior ---}
 picturesBasePath = "Draw/"
@@ -22,7 +23,8 @@ generalPictureFileList = []
 
 warriorPictureFileList :: WarriorClass -> PictureFileList
 warriorPictureFileList wc
-        | wc==MeleeWarrior = MW.warriorPictureFileList
+        | wc == MeleeWarrior = MW.warriorPictureFileList
+        | wc == Wobble = []
         | otherwise        = error ("No warrior picture file list defined for WarriorClass \"" ++ show wc ++ "\"!")
 
 loadPictures :: PictureFileList -> IO LoadedPictures
@@ -34,7 +36,7 @@ loadPictures pfl = (Traversable.sequence $
 loadAllPictures :: IO AllLoadedPictures
 loadAllPictures = do
     generalPics <- loadPictures generalPictureFileList
-    warriorPics <- sequence $ map (loadPictures.warriorPictureFileList) [minBound :: WarriorClass ..]
+    warriorPics <- sequence $ map (loadPictures . warriorPictureFileList) [minBound :: WarriorClass ..]
     return $ AllLoadedPictures generalPics (Map.fromList $ zip [minBound :: WarriorClass ..] warriorPics)
 
 {--- drawing ---}
@@ -43,11 +45,12 @@ drawBackground pics = Blank
 
 getWarriorDrawer :: WarriorClass -> WarriorDrawer
 getWarriorDrawer wc
-    | wc==MeleeWarrior = MW.drawWarrior
+    | wc == MeleeWarrior = MW.drawWarrior
+    | wc == Wobble = Wobble.drawWarrior
     | otherwise        = error ("No draw function defined for WarriorClass \"" ++ show wc ++ "\"!")
 
 drawWarrior :: AllWarriorPictures -> Warrior -> Picture
-drawWarrior pics w = getWarriorDrawer  wc (pics Map.! wc) w
+drawWarrior pics w = getWarriorDrawer wc (pics Map.! wc) w
     where (Warrior Soul{figureClass=wc} _) = w
 
 drawWarriors :: AllWarriorPictures -> [Warrior] -> Picture

@@ -12,7 +12,7 @@ mover pos _ = moveTo pos
 
 warrior :: Position -> Warrior
 warrior pos = Warrior
-    Soul { figureClass = MeleeWarrior,
+    Soul { figureClass = Wobble,
            size = 60,
            velocity = 1,
            vitality = 1,

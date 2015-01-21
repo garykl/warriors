@@ -10,7 +10,7 @@ import Geometry
 -- but there are possible use cases for the logic, like usage of certain
 -- actions, specific to the class.
 data WarriorClass = MeleeWarrior
---                    | Wizard
+                  | Wobble
                     deriving (Enum, Bounded, Show, Eq, Ord)
 
 -- | the soul consists of properties, that usually are not changeable
