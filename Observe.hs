@@ -8,6 +8,10 @@ import Data.List (sortBy)
 import Data.Function (on)
 
 
+warriorDead :: Warrior -> Bool
+warriorDead (Warrior _ agent) = lifepoints agent <= 0
+
+
 warriorDistances :: Position -> Field -> [WarriorIdentifier]
 warriorDistances pos field =
 

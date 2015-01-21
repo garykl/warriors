@@ -45,8 +45,10 @@ instance Randomizable Position where
 -- may be in the future (-> values are lists of @Effect@s).
 actionToEffects :: Field -> WarriorIdentifier -> Action -> Effects
 actionToEffects field wid action =
-    let Warrior soul agent = field N.! wid
-    in  case action of
+    let warrior@(Warrior soul agent) = field N.! wid
+    in
+      if O.warriorDead warrior then emptyEffects (N.keys field) else
+        case action of
 
             Melee vec ->
 
@@ -61,14 +63,17 @@ actionToEffects field wid action =
                     -- find nearest warrior
                     pos = position agent .+ vec
                     nearestId = head $ O.warriorDistances pos field
-                    nearestPos = let Warrior _ ag = field N.! nearestId
+                    nearestWarrior = field N.! nearestId
+                    nearestPos = let Warrior _ ag = nearestWarrior
                                  in  position ag
 
                     distance = vectorLength $ nearestPos .-. position agent
 
                     attackerEffect ag = ag { actionStatus = newStatus }
-                    defenderEffect ag =
-                        if distance < meleeDistance && phase == 0
+                    defenderEffect ag
+                      | O.warriorDead nearestWarrior  = ag
+                      | otherwise =
+                          if distance < meleeDistance && phase == 0
                             then ag {lifepoints = lifepoints ag - meleeDamage}
                             else ag
 
