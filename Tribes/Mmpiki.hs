@@ -23,6 +23,6 @@ warrior pos = Warrior
 
 
 provide :: M.Map WarriorName (Warrior, Intelligence)
-provide = M.insert "Heinz" (warrior (Pos 50 0), attacker (Vec (-50) 0))
-        . M.insert "Angela" (warrior (Pos (-50) 0), attacker (Vec 50 0))
+provide = M.insert "Heinz" (warrior (Pos 50 0), attacker (Vec (-100) 0))
+        . M.insert "Angela" (warrior (Pos (-50) 0), attacker (Vec 100 0))
         $ M.empty

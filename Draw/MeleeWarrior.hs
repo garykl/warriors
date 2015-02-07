@@ -92,8 +92,12 @@ drawStars pics _ = Gloss.Blank
 
 {--- put everything together ---}
 drawWarrior :: WarriorDrawer
-drawWarrior pics (Warrior _ a@(Agent p _ _)) = Gloss.Pictures [
-    movePictureTo p (pics figure),
-    drawStars pics a,
-    drawMace pics a
-  ]
+drawWarrior pics warrior@(Warrior _ a@(Agent p _ _)) =
+    Gloss.rotate (if warriorDead warrior
+        then 90
+        else 0) $
+      Gloss.Pictures [
+        movePictureTo p (pics figure),
+        drawStars pics a,
+        drawMace pics a
+      ]

@@ -65,7 +65,7 @@ drawAll (AllLoadedPictures generalPics warriorPics) field =
     Pictures [drawBackground generalPics,
               drawWarriors warriorPics (fieldToListOfWarriors field)]
 
-{--- main loop ---}
+
 mainLoop :: Field -> (Field -> Field) -> IO ()
 mainLoop initialField performAction = do
         pics <- loadAllPictures
@@ -74,4 +74,4 @@ mainLoop initialField performAction = do
               24
               initialField
               (drawAll pics)
-              (\vp -> (\ti -> performAction))
+              (\vp ti -> performAction)

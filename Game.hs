@@ -8,6 +8,7 @@ import qualified NestedMap as N
 import Geometry
 import Rand as R
 
+
 -- | for knowing what the @Effect@ of an @Action@ is, we need the @Field@,
 -- the @Warrior@ tht performs the @Action@ and the @Action@ itself. Multiple
 -- target may be affected (-> keys are @WarriorIdentifier@s) and the effect
@@ -29,6 +30,7 @@ actionToEffects field wid action =
                         _ ->
                             let newPhase = meleeDuration `div` 2
                             in  (MeleeAttacking 1 newPhase vec, newPhase)
+
                     -- find nearest warrior
                     pos = position agent .+ vec
                     nearestId = head $ O.warriorDistances pos field

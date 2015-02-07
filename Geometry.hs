@@ -4,7 +4,7 @@ module Geometry where
 -- vectors are the differences of Positions
 -- we could also define extra classes, but we don't have to
 
-data Vector = Vec Float Float
+data Vector = Vec Float Float deriving Show
 
 (|+|) :: Vector -> Vector -> Vector
 Vec x1 y1 |+| Vec x2 y2 = Vec (x1+x2) (y1+y2)

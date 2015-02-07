@@ -16,6 +16,7 @@ data Soul = Soul { figureClass :: WarriorClass,
                    velocity :: Float,  -- ^ potential maximum velocity
                    vitality :: Float,  -- ^ influences @Agent@s lifepoints
                    strength :: Float } -- ^ influences @Agent@s melee
+                       deriving Show
 
 meleeDuration :: Int
 meleeDuration = 15
@@ -24,7 +25,7 @@ meleeHitTime :: Int
 meleeHitTime = 5
 
 meleeDistance :: Float
-meleeDistance = 30
+meleeDistance = 110
 
 meleeDamage :: Float
 meleeDamage = 1
@@ -34,18 +35,19 @@ meleeDamage = 1
 -- Moving or
 -- MeleeData: Amount, Phase, Target relative to attackers position
 data ActionStatus = Faineancing | Moving | MeleeAttacking Float Int Vector
+                        deriving Show
 
 
 -- | the @Agent@ is the suffering part during the simulation. Values may
 -- constantly change, due to attack, spells or movements.
 data Agent = Agent { position :: Position,
                      lifepoints :: Float,
-                     actionStatus :: ActionStatus }
+                     actionStatus :: ActionStatus } deriving Show
 
 
 -- | the @Warrior@ is a virtual robot in arbitrary form, with an associating
 -- artificial intelligence.
-data Warrior = Warrior Soul Agent
+data Warrior = Warrior Soul Agent deriving Show
 
 
 warriorDead :: Warrior -> Bool
