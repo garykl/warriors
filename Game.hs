@@ -1,6 +1,7 @@
 module Game where
 
 
+import Warrior
 import Logic
 import qualified Observe as O
 import qualified NestedMap as N

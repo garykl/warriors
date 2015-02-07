@@ -3,6 +3,7 @@ module KiBuild (Intelligence, Warrior(Warrior), Soul(..), Agent(..),
                 moveTo, melee) where
 
 
+import Warrior
 import Logic
 import Geometry
 

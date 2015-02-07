@@ -5,7 +5,7 @@ import qualified Data.Map as Map
 import qualified Graphics.Gloss as Gloss
 
 import Geometry
-import Logic
+import Warrior
 import Draw.DrawTypes
 
 {--- general stuff ---}

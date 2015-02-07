@@ -1,6 +1,7 @@
 module Main where
 
 import Game
+import Warrior
 import Logic
 import Draw.Draw (mainLoop)
 

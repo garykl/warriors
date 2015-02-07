@@ -1,6 +1,7 @@
 module Observe where
 
 
+import Warrior
 import Logic
 import Geometry
 import qualified NestedMap as N
