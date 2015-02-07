@@ -46,3 +46,32 @@ data Agent = Agent { position :: Position,
 -- | the @Warrior@ is a virtual robot in arbitrary form, with an associating
 -- artificial intelligence.
 data Warrior = Warrior Soul Agent
+
+
+warriorDead :: Warrior -> Bool
+warriorDead (Warrior _ agent) = lifepoints agent <= 0
+
+
+agentDistance :: Agent -> Agent -> Float
+agentDistance a1 a2 = vectorLength $ position a1 .-. position a2
+
+
+warriorCross :: Warrior -> Warrior -> Bool
+warriorCross (Warrior sl1 ag1) (Warrior sl2 ag2) =
+    agentDistance ag1 ag2 < size sl1 + size sl2
+
+
+modifyAgent :: (Agent -> Agent) -> Warrior -> Warrior
+modifyAgent f (Warrior soul agent) = Warrior soul (f agent)
+
+
+modifySoul :: (Soul -> Soul) -> Warrior -> Warrior
+modifySoul f (Warrior soul agent) = Warrior (f soul) agent
+
+
+liftWarrior :: (Agent -> a) -> Warrior -> a
+liftWarrior f (Warrior _ agent) = f agent
+
+
+liftWarriors :: (Agent -> Agent -> a) -> Warrior -> Warrior -> a
+liftWarriors f (Warrior _ a1) (Warrior _ a2) = f a1 a2

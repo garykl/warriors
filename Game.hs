@@ -16,7 +16,7 @@ actionToEffects :: Field -> WarriorIdentifier -> Action -> Effects
 actionToEffects field wid action =
     let warrior@(Warrior soul agent) = field N.! wid
     in
-      if O.warriorDead warrior then emptyEffects (N.keys field) else
+      if warriorDead warrior then emptyEffects (N.keys field) else
         case action of
 
             Melee vec ->
@@ -40,7 +40,7 @@ actionToEffects field wid action =
 
                     attackerEffect ag = ag { actionStatus = newStatus }
                     defenderEffect ag
-                      | O.warriorDead nearestWarrior  = ag
+                      | warriorDead nearestWarrior  = ag
                       | otherwise =
                           if distance < meleeDistance && phase == 0
                             then ag {lifepoints = lifepoints ag - meleeDamage}
