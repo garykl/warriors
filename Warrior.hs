@@ -34,7 +34,7 @@ meleeDamage = 1
 -- | @ActionStatus@ is either
 -- Moving or
 -- MeleeData: Amount, Phase, Target relative to attackers position
-data ActionStatus = Faineancing | Moving | MeleeAttacking Float Int Vector
+data ActionStatus = Faineancing | Moving Vector | MeleeAttacking Float Int Vector
                         deriving Show
 
 

@@ -64,7 +64,7 @@ actionToEffects field wid action =
                     futureAgent = agent { position = futurePosition }
                     effect ag = ag {
                         position = futurePosition,
-                        actionStatus = Moving }
+                        actionStatus = Moving direction }
 
                 -- check if future is possible and make it eventually
                 in  if O.fieldCross (N.delete wid field)

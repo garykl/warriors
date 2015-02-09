@@ -9,7 +9,20 @@ import Geometry
 
 drawWarrior :: DT.WarriorDrawer
 drawWarrior _ (W.Warrior soul agent) =
-    let Pos x y = W.position agent
-    in  G.translate x y $
-            G.Pictures [G.color G.blue $ G.circleSolid (W.size soul),
-                        G.color G.orange $ G.circle (W.size soul)]
+  let Pos x y = W.position agent
+  in  G.translate x y $
+    case W.actionStatus agent of
+        W.Faineancing -> theCircle
+        W.Moving target ->
+            elongate (angleOfVector target) theCircle
+        W.MeleeAttacking amount phase target ->
+            elongate (angleOfVector target) theCircle
+    where
+      theCircle :: G.Picture
+      theCircle =
+          G.Pictures [G.color G.blue $ G.circleSolid (W.size soul),
+                      G.color G.orange $ G.circle (W.size soul)]
+      elongate :: Float -> G.Picture -> G.Picture
+      elongate angle pic = G.rotate (negate . toDegree $ angle) $ G.scale 1.3 0.7 pic
+      toDegree :: Float -> Float
+      toDegree angle = 180 * angle / pi
