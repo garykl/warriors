@@ -27,24 +27,24 @@ actionToEffects field wid action =
                 let status = actionStatus agent
                     (newStatus, phase) = case status of
                         MeleeAttacking amount phase target ->
-                            let newPhase = (1 + phase) `mod` meleeDuration
+                            let newPhase = (1 + phase) `mod` meleeDuration soul
                             in  (MeleeAttacking amount newPhase vec, newPhase)
                         _ ->
-                            let newPhase = meleeDuration `div` 2
+                            let newPhase = meleeDuration soul `div` 2
                             in  (MeleeAttacking 1 newPhase vec, newPhase)
 
                     -- find nearest warrior
-                    pos = position agent .+ vec
+                    pos = position agent .+ (meleeDistance soul |*| normalize vec)
 
                     nearestIds = O.warriorDistances pos field
                     nearestPoss =
-                        map (liftWarrior position . (field N.!)) nearestIds
-                    distances = [vectorLength $ np .-. position agent
+                        map (liftAgent position . (field N.!)) nearestIds
+                    distances = [vectorLength $ np .-. pos
                                     | np <- nearestPoss]
 
                     targets =
-                        map fst $ filter (\(i, d) -> d < meleeDistance)
-                                       $ zip nearestIds (debug distances)
+                        map fst $ filter (\(i, d) -> d < meleeDistance soul)
+                                       $ zip nearestIds distances
 
                     -- produce effect templates
                     attackerEffect ag = ag { actionStatus = newStatus }
@@ -52,12 +52,12 @@ actionToEffects field wid action =
                       | agentDead ag = ag
                       | otherwise =
                           if phase == 0
-                            then ag {lifepoints = lifepoints ag - meleeDamage}
+                            then ag {lifepoints = lifepoints ag - meleeDamage soul}
                             else ag
 
                 -- compose effects
                 in  ([Effect attackerEffect] N.->- wid) .
-                    composeAll [[Effect defenderEffect] N.->- ni | ni <- targets]
+                    composeAll [[Effect defenderEffect] N.->- ni | ni <- debug targets]
                         $ emptyEffects $ N.keys field
 
 

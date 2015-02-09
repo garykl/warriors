@@ -34,29 +34,30 @@ warriorPictureFileList = [
 {--- mace stuff ---}
 maceAngleForMovingAction = 30 -- in degrees
 
-meleeMaceHitDuration = round $ 0.05 * fromIntegral meleeDuration
-meleeHitTimePlusMaceDelay = meleeHitTime + meleeMaceHitDuration
+meleeMaceHitDuration :: Warrior -> Int
+meleeMaceHitDuration warrior = round $ 0.05 * fromIntegral (liftSoul meleeDuration warrior)
+meleeHitTimePlusMaceDelay warrior = meleeHitTime + meleeMaceHitDuration warrior
 maxMaceAngleDiffForMeleeAction = 45 -- in degress
 maceAngleOffsetForMeleeAction = 6 -- in drgrees
 
-maceAngleDynamicsInDeg :: Int -> Float
-maceAngleDynamicsInDeg phase
+maceAngleDynamicsInDeg :: Warrior -> Int -> Float
+maceAngleDynamicsInDeg warrior phase
   | phase<meleeHitTime
       = (1.0 - (fromIntegral phase)/(fromIntegral meleeHitTime))
               * maxMaceAngleDiffForMeleeAction
-  | (phase>=meleeHitTime) && (phase<meleeHitTimePlusMaceDelay)
+  | (phase>=meleeHitTime) && (phase < meleeHitTimePlusMaceDelay warrior)
       = 0
-  | (phase>=meleeHitTimePlusMaceDelay)
-      = (fromIntegral $ phase - meleeHitTimePlusMaceDelay)
-              /(fromIntegral $ meleeDuration - meleeHitTimePlusMaceDelay)
+  | (phase >= meleeHitTimePlusMaceDelay warrior)
+      = (fromIntegral $ phase - meleeHitTimePlusMaceDelay warrior)
+              /(fromIntegral $ liftSoul meleeDuration warrior - meleeHitTimePlusMaceDelay warrior)
               * maxMaceAngleDiffForMeleeAction
 
-maceAngleInDegForMeleeAction :: Int -> Float -> Float
-maceAngleInDegForMeleeAction phase baseAngle
+maceAngleInDegForMeleeAction :: Warrior -> Int -> Float -> Float
+maceAngleInDegForMeleeAction warrior phase baseAngle
   | ((n `mod` 2) == 0) =
-      baseAngle + maceAngleOffsetForMeleeAction + maceAngleDynamicsInDeg phase
+      baseAngle + maceAngleOffsetForMeleeAction + maceAngleDynamicsInDeg warrior phase
   | ((n `mod` 2) == 1) =
-      baseAngle - maceAngleOffsetForMeleeAction - maceAngleDynamicsInDeg phase
+      baseAngle - maceAngleOffsetForMeleeAction - maceAngleDynamicsInDeg warrior phase
   where n = 4 + round ( baseAngle/180 )
 
 drawMaceAtAngleInDeg :: LoadedPictures -> Position -> Float -> Gloss.Picture
@@ -65,26 +66,27 @@ drawMaceAtAngleInDeg pics p angle =
             Gloss.rotate (90-angle) $
             movePictureBy negMaceAnchorRelPosInMace $ pics mace
 
-drawMace :: LoadedPictures -> Agent -> Gloss.Picture
-drawMace pics (Agent pos _ (MeleeAttacking _ phase meleeVec)) =
+drawMace :: LoadedPictures -> Warrior -> Gloss.Picture
+drawMace pics warrior@(Warrior _ (Agent pos _ (MeleeAttacking _ phase meleeVec))) =
             drawMaceAtAngleInDeg pics pos $
-            maceAngleInDegForMeleeAction phase $
+            maceAngleInDegForMeleeAction warrior phase $
             radToDeg $ angleOfVector (meleeVec |-| maceAnchorRelPosInFigure)
-drawMace pics (Agent pos _ _) =
+drawMace pics (Warrior _ (Agent pos _ _)) =
             drawMaceAtAngleInDeg pics pos maceAngleForMovingAction
 
 {--- stars stuff ---}
-meleeStarsDuration = round $ 0.15 * fromIntegral meleeDuration
-meleeHitTimePlusStarsDelay = meleeHitTime + meleeStarsDuration
+meleeStarsDuration :: Warrior -> Int
+meleeStarsDuration warrior = round $ 0.15 * fromIntegral (liftSoul meleeDuration warrior)
+meleeHitTimePlusStarsDelay warrior = meleeHitTime + meleeStarsDuration warrior
 starsRadiusRatioOffset = 0.4
 
-drawStars :: LoadedPictures -> Agent -> Gloss.Picture
-drawStars pics (Agent pos _ (MeleeAttacking _ phase meleeVec))
-  | (phase>=meleeHitTime) && (phase<=meleeHitTimePlusStarsDelay) = movePictureTo (pos .+ meleeVec) $
+drawStars :: LoadedPictures -> Warrior -> Gloss.Picture
+drawStars pics warrior@(Warrior _ (Agent pos _ (MeleeAttacking _ phase meleeVec)))
+  | (phase>=meleeHitTime) && (phase <= meleeHitTimePlusStarsDelay warrior) = movePictureTo (pos .+ meleeVec) $
       Gloss.Pictures [ pics bam,
         scalePicture (starsRadiusRatioOffset +
             (1.0-starsRadiusRatioOffset)*(fromIntegral $ phase - meleeHitTime)
-              /(fromIntegral meleeStarsDuration)) $ pics stars
+              /(fromIntegral $ meleeStarsDuration warrior)) $ pics stars
       ]
   | otherwise = Gloss.Blank
 drawStars pics _ = Gloss.Blank
@@ -98,6 +100,6 @@ drawWarrior pics warrior@(Warrior _ a@(Agent p _ _)) =
         else 0) $
       Gloss.Pictures [
         movePictureTo p (pics figure),
-        drawStars pics a,
-        drawMace pics a
+        drawStars pics warrior,
+        drawMace pics warrior
       ]

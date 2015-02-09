@@ -18,17 +18,18 @@ data Soul = Soul { figureClass :: WarriorClass,
                    strength :: Float } -- ^ influences @Agent@s melee
                        deriving Show
 
-meleeDuration :: Int
-meleeDuration = 15
+meleeDuration :: Soul -> Int
+meleeDuration soul = round $ velocity soul + strength soul
 
+-- TODO: Matthias, what is this? Removing from Logic?
 meleeHitTime :: Int
 meleeHitTime = 5
 
-meleeDistance :: Float
-meleeDistance = 110
+meleeDistance :: Soul -> Float
+meleeDistance soul = 2 * size soul
 
-meleeDamage :: Float
-meleeDamage = 1
+meleeDamage :: Soul -> Float
+meleeDamage = strength
 
 
 -- | @ActionStatus@ is either
@@ -55,7 +56,7 @@ agentDead agent = lifepoints agent <= 0
 
 
 warriorDead :: Warrior -> Bool
-warriorDead = liftWarrior agentDead
+warriorDead = liftAgent agentDead
 
 
 agentDistance :: Agent -> Agent -> Float
@@ -75,12 +76,16 @@ modifySoul :: (Soul -> Soul) -> Warrior -> Warrior
 modifySoul f (Warrior soul agent) = Warrior (f soul) agent
 
 
-liftWarrior :: (Agent -> a) -> Warrior -> a
-liftWarrior f (Warrior _ agent) = f agent
+liftAgent :: (Agent -> a) -> Warrior -> a
+liftAgent f (Warrior _ agent) = f agent
 
 
-liftWarriors :: (Agent -> Agent -> a) -> Warrior -> Warrior -> a
-liftWarriors f (Warrior _ a1) (Warrior _ a2) = f a1 a2
+liftSoul :: (Soul -> a) -> Warrior -> a
+liftSoul f (Warrior soul _) = f soul
+
+
+liftAgents :: (Agent -> Agent -> a) -> Warrior -> Warrior -> a
+liftAgents f (Warrior _ a1) (Warrior _ a2) = f a1 a2
 
 
 --------------------------------------------------------------------------------
@@ -88,11 +93,11 @@ liftWarriors f (Warrior _ a1) (Warrior _ a2) = f a1 a2
 
 meleeWarrior :: Position -> Warrior
 meleeWarrior pos = Warrior
-    Soul { figureClass = Wobble,
-           size = 40,
-           velocity = 1,
-           vitality = 1,
-           strength = 1 }
+    Soul { figureClass = MeleeWarrior,
+           size = 50,
+           velocity = 5,
+           vitality = 10,
+           strength = 10 }
     Agent { position = pos,
-            lifepoints = 10,
+            lifepoints = 30,
             actionStatus = Faineancing }
