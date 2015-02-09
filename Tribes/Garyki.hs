@@ -6,8 +6,8 @@ import Geometry
 import qualified Data.Map as M
 
 
-mover :: Position -> Intelligence
-mover pos _ = moveTo pos
+mover :: Vector -> Intelligence
+mover vec _ = move vec
 
 
 warrior :: Position -> Warrior
@@ -24,7 +24,7 @@ warrior pos = Warrior
 
 intelligentWarrior :: Position -> (Warrior, Intelligence)
 intelligentWarrior pos@(Pos x y) =
-    (warrior pos, mover (Pos (-y) x))
+    (warrior pos, mover $ Pos (-y) x .-. pos)
 
 
 (-<-) :: Ord k => k -> a -> M.Map k a -> M.Map k a

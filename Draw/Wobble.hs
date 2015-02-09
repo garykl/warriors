@@ -15,7 +15,7 @@ drawWarrior _ (W.Warrior soul agent) =
 
     case W.actionStatus agent of
 
-        W.Faineancing -> G.color G.grey theCircle
+        W.Faineancing -> G.color (G.greyN 0.5) theCircle
 
         W.Moving target ->
             elongate (angleOfVector target) theCircle
@@ -24,12 +24,15 @@ drawWarrior _ (W.Warrior soul agent) =
             elongate (angleOfVector target) theCircle
 
     where
+
       theCircle :: G.Picture
       theCircle =
           G.Pictures [G.color G.blue $ G.circleSolid (W.size soul),
                       G.color G.orange $ G.circle (W.size soul)]
+
       elongate :: Float -> G.Picture -> G.Picture
       elongate angle pic =
           G.rotate (negate . toDegree $ angle) $ G.scale 1.3 0.7 pic
+
       toDegree :: Float -> Float
       toDegree angle = 180 * angle / pi

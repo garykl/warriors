@@ -1,6 +1,6 @@
 module KiBuild (Intelligence, Warrior(Warrior), Soul(..), Agent(..),
                 ActionStatus(Faineancing), WarriorClass(..), WarriorName,
-                moveTo, melee, meleeWarrior) where
+                move, melee, meleeWarrior) where
 
 
 import Warrior
@@ -8,8 +8,8 @@ import Logic
 import Geometry
 
 
-moveTo :: Position -> Action
-moveTo = MoveTo
+move :: Vector -> Action
+move = Move
 
 
 melee :: Vector -> Action

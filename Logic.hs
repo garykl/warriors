@@ -77,7 +77,7 @@ type Intelligences = N.Nmap TribeName WarriorName Intelligence
 -- @Action@s are converted into @Effect@s, which are then added to the
 -- @Agent@s.
 data Action = Melee Vector  -- relative to attackers position
-            | MoveTo Position -- absolute position of the aim
+            | Move Vector   -- relative position of the aim
 
 
 type TribeName = String

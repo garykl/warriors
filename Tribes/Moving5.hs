@@ -6,13 +6,13 @@ import Geometry
 import qualified Data.Map as M
 
 
-mover :: Position -> Intelligence
-mover pos _ = moveTo pos
+mover :: Vector -> Intelligence
+mover vec _ = move vec
 
 
 intelligentWarrior :: Position -> (Warrior, Intelligence)
 intelligentWarrior pos@(Pos x y) =
-    (meleeWarrior pos, mover (Pos 300 0))
+    (meleeWarrior pos, mover $ Pos 300 0 .-. pos)
 
 
 (-<-) :: Ord k => k -> a -> M.Map k a -> M.Map k a

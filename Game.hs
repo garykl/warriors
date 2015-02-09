@@ -54,10 +54,10 @@ actionToEffects field wid action =
                         $ emptyEffects $ N.keys field
 
 
-            MoveTo pos ->
+            Move vec ->
 
                 -- compute what future could bring
-                let direction = normalize $ pos .-. position agent
+                let direction = normalize vec
                     futurePosition =
                         R.randomize (Pos 1 1)
                                 $ position agent .+ (velocity soul |*| direction)
