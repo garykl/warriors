@@ -1,6 +1,6 @@
 module KiBuild (Intelligence, Warrior(Warrior), Soul(..), Agent(..),
                 ActionStatus(Faineancing), WarriorClass(..), WarriorName,
-                moveTo, melee) where
+                moveTo, melee, meleeWarrior) where
 
 
 import Warrior

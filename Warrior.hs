@@ -77,3 +77,18 @@ liftWarrior f (Warrior _ agent) = f agent
 
 liftWarriors :: (Agent -> Agent -> a) -> Warrior -> Warrior -> a
 liftWarriors f (Warrior _ a1) (Warrior _ a2) = f a1 a2
+
+
+--------------------------------------------------------------------------------
+-- warrior constructors
+
+meleeWarrior :: Position -> Warrior
+meleeWarrior pos = Warrior
+    Soul { figureClass = Wobble,
+           size = 40,
+           velocity = 1,
+           vitality = 1,
+           strength = 1 }
+    Agent { position = pos,
+            lifepoints = 10,
+            actionStatus = Faineancing }
