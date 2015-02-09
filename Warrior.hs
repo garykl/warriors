@@ -50,8 +50,12 @@ data Agent = Agent { position :: Position,
 data Warrior = Warrior Soul Agent deriving Show
 
 
+agentDead :: Agent -> Bool
+agentDead agent = lifepoints agent <= 0
+
+
 warriorDead :: Warrior -> Bool
-warriorDead (Warrior _ agent) = lifepoints agent <= 0
+warriorDead = liftWarrior agentDead
 
 
 agentDistance :: Agent -> Agent -> Float

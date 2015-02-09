@@ -8,6 +8,8 @@ import qualified NestedMap as N
 import Geometry
 import Rand as R
 
+import Debug
+
 
 -- | for knowing what the @Effect@ of an @Action@ is, we need the @Field@,
 -- the @Warrior@ tht performs the @Action@ and the @Action@ itself. Multiple
@@ -33,24 +35,29 @@ actionToEffects field wid action =
 
                     -- find nearest warrior
                     pos = position agent .+ vec
-                    nearestId = head $ O.warriorDistances pos field
-                    nearestWarrior = field N.! nearestId
-                    nearestPos = let Warrior _ ag = nearestWarrior
-                                 in  position ag
 
-                    distance = vectorLength $ nearestPos .-. position agent
+                    nearestIds = O.warriorDistances pos field
+                    nearestPoss =
+                        map (liftWarrior position . (field N.!)) nearestIds
+                    distances = [vectorLength $ np .-. position agent
+                                    | np <- nearestPoss]
 
+                    targets =
+                        map fst $ filter (\(i, d) -> d < meleeDistance)
+                                       $ zip nearestIds (debug distances)
+
+                    -- produce effect templates
                     attackerEffect ag = ag { actionStatus = newStatus }
                     defenderEffect ag
-                      | warriorDead nearestWarrior  = ag
+                      | agentDead ag = ag
                       | otherwise =
-                          if distance < meleeDistance && phase == 0
+                          if phase == 0
                             then ag {lifepoints = lifepoints ag - meleeDamage}
                             else ag
 
-                    -- check if that warrior is near enough
+                -- compose effects
                 in  ([Effect attackerEffect] N.->- wid) .
-                    ([Effect defenderEffect] N.->- nearestId)
+                    composeAll [[Effect defenderEffect] N.->- ni | ni <- targets]
                         $ emptyEffects $ N.keys field
 
 

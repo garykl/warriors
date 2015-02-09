@@ -15,13 +15,14 @@ drawWarrior _ (W.Warrior soul agent) =
 
     case W.actionStatus agent of
 
-        W.Faineancing -> G.color (G.greyN 0.5) theCircle
+        W.Faineancing ->
+            G.color (G.greyN 0.5) theCircle
 
         W.Moving target ->
             elongate (angleOfVector target) theCircle
 
         W.MeleeAttacking _ _ target ->
-            elongate (angleOfVector target) theCircle
+            G.color G.red $ elongate (angleOfVector target) theCircle
 
     where
 
