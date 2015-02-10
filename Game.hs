@@ -3,7 +3,6 @@ module Game where
 
 import Warrior
 import Logic
-import qualified Observe as O
 import qualified NestedMap as N
 import Geometry
 import Rand as R
@@ -22,6 +21,7 @@ actionToEffects field wid action =
       if warriorDead warrior then emptyEffects (N.keys field) else
         case action of
 
+
             Melee vec ->
 
                 let status = actionStatus agent
@@ -38,12 +38,12 @@ actionToEffects field wid action =
 
                     -- produce effect templates
                     attackerEffect ag = ag { actionStatus = newStatus }
-                    defenderEffect ag
-                      | agentDead ag = ag
-                      | otherwise =
-                          if phase == 0
-                            then ag {lifepoints = lifepoints ag - meleeDamage soul}
-                            else ag
+                    defenderEffect =
+                        if phase /= 0
+                          then id
+                          else \ag -> if agentDead ag then ag
+                            else
+                              ag {lifepoints = lifepoints ag - meleeDamage soul}
 
                 -- compose effects
                 in  ([Effect attackerEffect] N.->- wid) .
@@ -64,11 +64,16 @@ actionToEffects field wid action =
                         actionStatus = Moving direction }
 
                 -- check if future is possible and make it eventually
-                in  if O.fieldCross (N.delete wid field)
-                                    (Warrior soul futureAgent)
+                in  if fieldCross (N.delete wid field)
+                                  (Warrior soul futureAgent)
                       then emptyEffects $ N.keys field
                       else [Effect effect] N.->- wid $ emptyEffects $ N.keys field
 
+
+    where
+
+        fieldCross :: Field -> Warrior -> Bool
+        fieldCross field w = any (warriorCross w) $ N.elemsDeep field
 
 
 chooseAndPerformAction :: WarriorIdentifier -> Intelligences
