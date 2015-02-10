@@ -4,6 +4,10 @@ module Geometry where
 -- vectors are the differences of Positions
 -- we could also define extra classes, but we don't have to
 
+import Data.List (minimumBy, maximumBy)
+import Data.Function (on)
+
+
 data Vector = Vec Float Float deriving Show
 
 (|+|) :: Vector -> Vector -> Vector
@@ -28,6 +32,12 @@ normalize :: Vector -> Vector
 normalize vec@(Vec x y) =
     let l = vectorLength vec
     in  Vec (x / l) ( y / l)
+
+shortestVector :: [Vector] -> Vector
+shortestVector = minimumBy (compare `on` vectorLength)
+
+longestVector :: [Vector] -> Vector
+longestVector = maximumBy (compare `on` vectorLength)
 
 
 data Position = Pos Float Float deriving Show
