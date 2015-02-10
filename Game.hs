@@ -33,18 +33,8 @@ actionToEffects field wid action =
                             let newPhase = meleeDuration soul `div` 2
                             in  (MeleeAttacking 1 newPhase vec, newPhase)
 
-                    -- find nearest warrior
-                    pos = position agent .+ (meleeDistance soul |*| normalize vec)
-
-                    nearestIds = O.warriorDistances pos field
-                    nearestPoss =
-                        map (liftAgent position . (field N.!)) nearestIds
-                    distances = [vectorLength $ np .-. pos
-                                    | np <- nearestPoss]
-
-                    targets =
-                        map fst $ filter (\(i, d) -> d < meleeDistance soul)
-                                       $ zip nearestIds distances
+                    targets = filter (beatable warrior vec . (field N.!))
+                            $ N.keys field
 
                     -- produce effect templates
                     attackerEffect ag = ag { actionStatus = newStatus }
@@ -57,7 +47,7 @@ actionToEffects field wid action =
 
                 -- compose effects
                 in  ([Effect attackerEffect] N.->- wid) .
-                    composeAll [[Effect defenderEffect] N.->- ni | ni <- debug targets]
+                    composeAll [[Effect defenderEffect] N.->- ni | ni <- targets]
                         $ emptyEffects $ N.keys field
 
 

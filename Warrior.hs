@@ -60,12 +60,29 @@ warriorDead = liftAgent agentDead
 
 
 agentDistance :: Agent -> Agent -> Float
-agentDistance a1 a2 = vectorLength $ position a1 .-. position a2
+agentDistance a1 a2 = distanceToAgent a1 $ position a2
+
+
+distanceToAgent :: Agent -> Position -> Float
+distanceToAgent a pos = vectorLength $ position a .-. pos
 
 
 warriorCross :: Warrior -> Warrior -> Bool
 warriorCross (Warrior sl1 ag1) (Warrior sl2 ag2) =
     agentDistance ag1 ag2 < size sl1 + size sl2
+
+
+-- | @beatable w1 w2@ checks if @Warrior@ w1 can hit w2 by Melee
+beatable :: Warrior -> Vector -> Warrior -> Bool
+beatable w1 vec w2 =
+    let target = beatCenter w1 vec
+    in  vectorLength (target .-. liftAgent position w2) <= liftSoul size w2
+
+
+-- | calculate the position at which a warrior would hit in a certain direction
+beatCenter :: Warrior -> Vector -> Position
+beatCenter w v =
+    liftAgent position w .+ (liftSoul meleeDistance w |*| normalize v)
 
 
 modifyAgent :: (Agent -> Agent) -> Warrior -> Warrior
