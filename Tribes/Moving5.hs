@@ -7,7 +7,7 @@ import qualified Data.Map as M
 
 
 mover :: Vector -> Intelligence
-mover vec _ = move vec
+mover vec _ _ = move vec
 
 
 intelligentWarrior :: Position -> (Warrior, Intelligence)

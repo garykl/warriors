@@ -7,9 +7,15 @@ import Geometry
 import qualified Data.Map as M
 import Data.Functor ((<$>))
 import Control.Applicative
+import Data.List (minimumBy, maximumBy)
+import Data.Function (on)
 
 
 data FeatureExtraction a = FE (L.Environment -> a)
+
+
+within :: FeatureExtraction a -> L.Environment -> a
+within (FE f) = f
 
 
 instance Functor FeatureExtraction where
@@ -30,36 +36,47 @@ instance Applicative FeatureExtraction where
 --             extract fe = fe (L.Env M.empty [])
 
 
+onlyLiving :: [W.Warrior] -> [W.Warrior]
+onlyLiving = filter (not . W.warriorDead)
+
 enemies :: FeatureExtraction [W.Warrior]
-enemies = FE $ \(L.Env _ tribes) -> concatMap M.elems tribes
+enemies = FE $ \(L.Env _ tribes) -> onlyLiving $ concatMap M.elems tribes
 
 
 friends :: FeatureExtraction [W.Warrior]
-friends = FE $ \(L.Env tribe _) -> M.elems tribe
+friends = FE $ \(L.Env tribe _) -> onlyLiving $ M.elems tribe
 
 
-wherestCharacter :: ([Vector] -> Vector)
+wherestCharacter :: ((W.Warrior -> W.Warrior -> Ordering) -> [W.Warrior] -> W.Warrior)
                  -> FeatureExtraction [W.Warrior]
-                 -> W.Warrior -> FeatureExtraction Vector
+                 -> W.Warrior -> FeatureExtraction (Maybe W.Warrior)
 wherestCharacter g few warrior =
-    g . map (W.liftAgents W.agentToAgentVector warrior) <$> few
+
+    maybeWhereBy g (compare `on` vectorLength
+                             . W.liftAgents W.agentToAgentVector warrior)
+        <$> few
+
+
+maybeWhereBy :: ((a -> a -> Ordering) -> [a] -> a)
+             -> (a -> a -> Ordering) -> [a] -> Maybe a
+maybeWhereBy wby f ll = if null ll then Nothing else Just $ wby f ll
 
 
 -- | return the relative position of the nearest enemy
-nearestEnemy :: W.Warrior -> FeatureExtraction Vector
-nearestEnemy = wherestCharacter shortestVector enemies
+nearestEnemy :: W.Warrior -> FeatureExtraction (Maybe W.Warrior)
+nearestEnemy = wherestCharacter minimumBy enemies
 
 
 -- | return the relative position of the farest friend
-farestFriend :: W.Warrior -> FeatureExtraction Vector
-farestFriend = wherestCharacter longestVector friends
+farestFriend :: W.Warrior -> FeatureExtraction (Maybe W.Warrior)
+farestFriend = wherestCharacter maximumBy friends
 
 
 -- | return the relative position of the farest enemy
-farestEnemy :: W.Warrior -> FeatureExtraction Vector
-farestEnemy = wherestCharacter longestVector enemies
+farestEnemy :: W.Warrior -> FeatureExtraction (Maybe W.Warrior)
+farestEnemy = wherestCharacter maximumBy enemies
 
 
 -- | return the relative position of the nearest friend
-bearestFriend :: W.Warrior -> FeatureExtraction Vector
-bearestFriend = wherestCharacter shortestVector friends
+bearestFriend :: W.Warrior -> FeatureExtraction (Maybe W.Warrior)
+bearestFriend = wherestCharacter minimumBy friends

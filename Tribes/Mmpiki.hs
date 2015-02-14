@@ -6,7 +6,7 @@ import qualified Data.Map as M
 
 
 attacker :: Vector -> Intelligence
-attacker vec _ = melee vec
+attacker vec _ _ = melee vec
 
 
 provide :: M.Map WarriorName (Warrior, Intelligence)

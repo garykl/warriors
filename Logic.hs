@@ -75,7 +75,7 @@ data Environment = Env Tribe [Tribe]
 
 -- | @Intelligence@ is, when you are able to conclude different actions for
 -- different @Environment@s.
-type Intelligence = Environment -> Action
+type Intelligence = Warrior -> Environment -> Action
 type Intelligences = N.Nmap TribeName WarriorName Intelligence
 
 
@@ -118,7 +118,7 @@ composeAllSnd fs = composeAll $ map (snd .) fs
 
 chooseAction :: WarriorIdentifier -> Intelligences -> Field -> Action
 chooseAction wid intelligence field =
-    intelligence N.! wid $ getEnvironment wid field
+    (intelligence N.! wid) (field N.! wid) $ getEnvironment wid field
 
 
 

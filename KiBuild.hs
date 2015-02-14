@@ -1,6 +1,8 @@
 module KiBuild (Intelligence, Warrior(Warrior), Soul(..), Agent(..),
                 ActionStatus(Faineancing), WarriorClass(..), WarriorName,
-                move, melee, meleeWarrior) where
+                move, melee, meleeWarrior, meleeDistance,
+                liftSoul, liftAgent, liftAgents, beatable,
+                agentToAgentVector) where
 
 
 import Warrior
@@ -22,11 +24,11 @@ melee = Melee
 
 combineIdeas :: (Environment -> Bool) -> Intelligence -> Intelligence
              -> Intelligence
-combineIdeas f i1 i2 e = if f e then i1 e else i2 e
+combineIdeas f i1 i2 w e = if f e then i1 w e else i2 w e
 
 (>-<) :: Intelligence -> Intelligence -> (Environment -> Bool) -> Intelligence
 i1 >-< i2 = \f -> combineIdeas f i1 i2
 
 
 complement :: (Action -> Action) -> Intelligence -> Intelligence
-complement f i e = f $ i e
+complement f i w e = f $ i w e
