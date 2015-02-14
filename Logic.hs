@@ -96,6 +96,7 @@ composeAll :: [a -> a] -> a -> a
 composeAll [] a = a
 composeAll (f : fs) a = foldr (.) f fs a
 
+
 composeAllSnd :: [a -> (b, a)] -> a -> a
 composeAllSnd fs = composeAll $ map (snd .) fs
 
@@ -107,7 +108,7 @@ chooseAction wid intelligence field =
 
 
 -- | create the @Environment@ of a @Warrior@. This should depend on the
--- @Agent@, which dicides how well it is recognized.
+-- @Agent@, which decides how well it is recognized.
 -- TODO: implement the idea. current state: everything is recognized as it is
 -- and only sorted by the tribe.
 getEnvironment :: WarriorIdentifier -> Field -> Environment

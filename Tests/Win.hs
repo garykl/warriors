@@ -1,4 +1,4 @@
-module Main where
+module Tests.Animate where
 
 import Game
 import Warrior
@@ -38,5 +38,8 @@ main :: IO ()
 main = do
     putStrLn "Warriors"
     putStrLn "--------------------"
-    mainLoop initialField $ performTimestep gameKi -- hhh
+    let field = loop 1000 (performTimestep gameKi) initialField
+    print field
 
+loop :: Int -> (a -> a) -> a -> a
+loop n f = composeAll (replicate n f)
