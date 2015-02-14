@@ -64,7 +64,7 @@ agentDistance a1 a2 = distanceToAgent a1 $ position a2
 
 
 agentToAgentVector :: Agent -> Agent -> Vector
-agentToAgentVector a1 a2 = position a1 .-. position a2
+agentToAgentVector a1 a2 = position a2 .-. position a1
 
 
 distanceToAgent :: Agent -> Position -> Float
