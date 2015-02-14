@@ -38,11 +38,12 @@ main :: IO ()
 main = do
     putStrLn "Warriors"
     putStrLn "--------------------"
-    let field = loopIf (not . fightDecided)
-                       1000
-                       (performTimestep gameKi)
-                       initialField
-    print field
+    let (field, saved) =
+            loopIf (not . fightDecided . fst)
+                   3
+                   (saveStuff $ performTimestep gameKi)
+                   (initialField, [])
+    print saved
 
 
 loop :: Int -> (a -> a) -> a -> a
@@ -53,3 +54,7 @@ loopIf :: (a -> Bool) -> Int -> (a -> a) -> a -> a
 loopIf condition n f =
     let modF b = if condition b then f b else b
     in  loop n modF
+
+
+saveStuff :: (a -> a) -> (a, [a]) -> (a, [a])
+saveStuff f (b, bs) = (f b, b:bs)
