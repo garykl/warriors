@@ -8,27 +8,30 @@ import Geometry
 
 
 drawWarrior :: DT.WarriorDrawer
-drawWarrior _ (W.Warrior soul agent) =
+drawWarrior _ warrior@(W.Warrior soul agent) =
 
   let Pos x y = W.position agent
   in  G.translate x y $
 
-    case W.actionStatus agent of
+   if W.warriorDead warrior then theCircle (G.greyN 0.1)
+    else
 
-        W.Faineancing ->
-            G.color (G.greyN 0.5) theCircle
+     case W.actionStatus agent of
 
-        W.Moving target ->
-            elongate (angleOfVector target) theCircle
+         W.Faineancing ->
+             theCircle (G.greyN 0.5)
 
-        W.MeleeAttacking _ _ target ->
-            G.color G.red $ elongate (angleOfVector target) theCircle
+         W.Moving target ->
+             elongate (angleOfVector target) $ theCircle G.blue
+
+         W.MeleeAttacking _ _ target ->
+             elongate (angleOfVector target) $ theCircle G.red
 
     where
 
-      theCircle :: G.Picture
-      theCircle =
-          G.Pictures [G.color G.blue $ G.circleSolid (W.size soul),
+      theCircle :: G.Color -> G.Picture
+      theCircle color =
+          G.Pictures [G.color color $ G.circleSolid (W.size soul),
                       G.color G.orange $ G.circle (W.size soul)]
 
       elongate :: Float -> G.Picture -> G.Picture
