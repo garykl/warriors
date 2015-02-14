@@ -63,6 +63,12 @@ type WarriorName = String
 -- identity.
 type Tribe = M.Map WarriorName Warrior
 
+
+-- | check wether a @Tribe@ is dead
+tribeDead :: Tribe -> Bool
+tribeDead = all warriorDead . M.elems
+
+
 -- | each @Warrior@ sees its own environment, that consists of its own @Team@
 -- and the enemy team.
 data Environment = Env Tribe [Tribe]
@@ -84,6 +90,15 @@ type TribeName = String
 
 -- | the @Field@ is given by considering two Teams.
 type Field = N.Nmap TribeName WarriorName Warrior -- M.Map TribeName Tribe
+
+
+fieldToTribes :: Field -> [Tribe]
+fieldToTribes = N.elems
+
+
+fightDecided :: Field -> Bool
+fightDecided field =
+    length ((filter (not . tribeDead) . fieldToTribes) field) <= 1
 
 
 -- | a @Warrior@ on the @Field@ can be identified by its name (the key of the

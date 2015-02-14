@@ -38,8 +38,18 @@ main :: IO ()
 main = do
     putStrLn "Warriors"
     putStrLn "--------------------"
-    let field = loop 1000 (performTimestep gameKi) initialField
+    let field = loopIf (not . fightDecided)
+                       1000
+                       (performTimestep gameKi)
+                       initialField
     print field
+
 
 loop :: Int -> (a -> a) -> a -> a
 loop n f = composeAll (replicate n f)
+
+
+loopIf :: (a -> Bool) -> Int -> (a -> a) -> a -> a
+loopIf condition n f =
+    let modF b = if condition b then f b else b
+    in  loop n modF
